@@ -121,7 +121,3 @@ li { margin: 2px 0; }
     return res.status(500).json({ error: error.message });
   }
 }
-
-
-
-//---<<>>
