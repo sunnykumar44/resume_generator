@@ -79,7 +79,6 @@ Use this structure:
   <h2>Work Experience / Internships</h2>
   <div class="section">[Detail ${userProfile.experience[0].company} and roles]</div>
 
-  
   <h2>Projects</h2>
   <div class="section">[Highlight 2 projects from the profile relevant to the JD]</div>
 
