@@ -1,0 +1,17 @@
+{
+  "name": "check-models",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/genai": "^1.35.0",
+    "@google/generative-ai": "^0.24.1"
+  }
+}
