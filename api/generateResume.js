@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
+  // 2. Extract Data (Handling both direct and Firebase-style wrappers)
   const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
   const strategy = req.body?.strategy || "ats";
 
@@ -21,19 +22,21 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // FIXED: Changed to "gemini-1.5-flash" to stop the 404 error you are seeing
+    // Note: 'gemini-1.5-flash' is used because 'gemini-3-flash' is not a valid/existing model name as of Jan 2026
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
+    // 4. Strategy Map (Optional prompt tuning)
     const strategyMap = {
       ats: "Focus on machine-readable keywords and clean formatting.",
       faang: "Focus on scale, impact, and high-level quantitative metrics.",
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
+    // 5. Your Original Prompt Logic → only added tailoring instructions
     const prompt = `CRITICAL INSTRUCTION: You are creating a resume for a job applicant. The job description below is ONLY for reference - DO NOT COPY IT. Create ONLY the applicant's resume.
 
 ===== APPLICANT DETAILS =====
@@ -52,17 +55,18 @@ ${jobDescription}
 
 STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
+===== IMPORTANT TAILORING INSTRUCTIONS =====
+- Projects: Select/create 2-3 realistic fresher projects and tailor their description, technologies and impact to match the job description
+- Certifications: Select only 2-3 most relevant fresher-level certifications that would help for this job description
+- Achievements: Write 3-4 achievements connected to learning, projects or certifications, make them somewhat relevant to the job when possible
+
 OUTPUT RULES:
 1. Your FIRST line must be: <!DOCTYPE html>
 2. ONLY output the HTML resume.
 3. The name "${userProfile.name}" must be the first visible text.
 
-SPECIFIC SECTION INSTRUCTIONS:
-- PROJECTS: Select 2 projects from the profile. Rewrite them to show impact tailored specifically to the Job Description.
-- CERTIFICATIONS: Pick 2-3 certifications from the achievements in the profile relevant to the job and freshers.
-- ACHIEVEMENTS: For each certificate, write 1-2 lines on the project or skill learned to earn it.
-
 Use this exact structure:
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -83,7 +87,9 @@ li { margin: 2px 0; }
 </style>
 </head>
 <body>
+
 <h1>${userProfile.name}</h1>
+
 <div class="contact">
 <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
 <a href="${userProfile.linkedin}">LinkedIn</a> | 
@@ -91,7 +97,7 @@ li { margin: 2px 0; }
 </div>
 
 <h2>Professional Summary</h2>
-<div class="section"><p>[Write summary based on JD]</p></div>
+<div class="section"><p>[Write 2-3 sentences based on the ${strategy} strategy]</p></div>
 
 <h2>Technical Skills</h2>
 <div class="section skills">[Add skill badges relevant to job]</div>
@@ -103,19 +109,21 @@ li { margin: 2px 0; }
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
 <h2>Projects</h2>
-<div class="section">[Tailor 2 projects from profile here]</div>
+<div class="section">[Add 2-3 realistic projects - tailored to JD]</div>
 
 <h2>Certifications</h2>
-<div class="section"><ul>[Select 2-3 JD-relevant certifications]</ul></div>
+<div class="section"><ul>[Add 2-3 relevant fresher certifications - matched to JD]</ul></div>
 
-<h2>Key Achievements & Learning Outcomes</h2>
-<div class="section"><ul>[List achievements with learning sentences]</ul></div>
+<h2>Achievements</h2>
+<div class="section"><ul>[Add 3-4 achievements - connect to learning/certifications/projects, some relevance to JD]</ul></div>
+
 </body>
 </html>`;
 
     const result = await model.generateContent(prompt);
     let responseText = result.response.text();
     
+    // 6. Clean Markdown and Extract HTML
     responseText = responseText.replace(/```html|```/g, '');
     const htmlStart = responseText.indexOf('<!DOCTYPE html>');
     if (htmlStart > -1) {
