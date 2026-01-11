@@ -210,7 +210,7 @@ ul { margin-left: 18px; }
     .join("")}
 </div>
 
-<h2>Selected Projects</h2>
+<h2>Projects</h2>
 <div class="section">
   [AI: 2 JD-matched projects with metrics]
 </div>
