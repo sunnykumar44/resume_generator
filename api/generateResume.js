@@ -115,7 +115,7 @@ ul { margin-left: 18px; }
 <h2>Work Experience</h2>
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
-<h2>Selected Projects</h2>
+<h2>Projects</h2>
 <div class="section">[AI: 2 tailored projects with impact metrics]</div>
 
 <h2>Certifications</h2>
