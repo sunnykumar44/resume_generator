@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 
 export default async function handler(req, res) {
+  // 1. Vercel CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // FIXED: Changed model name to stable version to avoid 404 error
+    // FIXED: Using "gemini-1.5-flash" to avoid the 404 Beta version error
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
 
     const profilePath = path.join(process.cwd(), "profile.json");
@@ -28,11 +29,11 @@ export default async function handler(req, res) {
 
     const strategyMap = {
       ats: "Focus on entry-level keywords, clean layout, and specific technical skills.",
-      faang: "Focus on metrics, problem-solving during projects, and coding proficiency.",
-      startup: "Focus on versatility, building from 0 to 1, and speed."
+      faang: "Focus on impact metrics, scale, and specific problem-solving impact.",
+      startup: "Focus on versatility, fast learning, and end-to-end project ownership."
     };
 
-    const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer for a FRESHER. Create a resume demonstrating UPTO INTERMEDIATE-LEVEL skills.
+    const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer. Create a resume for a FRESHER that demonstrates UPTO INTERMEDIATE-LEVEL skills.
 
 ===== APPLICANT DATA =====
 Profile: ${JSON.stringify(userProfile)}
@@ -44,12 +45,12 @@ STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
 OUTPUT RULES:
 1. ONLY output HTML starting with <!DOCTYPE html>.
-2. FORMAT: Clean, single-column professional layout.
+2. FORMAT: Professional single-column layout.
 
 SECTION INSTRUCTIONS:
-- PROJECTS: Select 2 projects. Rewrite them to show intermediate-level impact (optimization and results) tailored to the JD.
-- CERTIFICATIONS: Pick MAX 2-3 relevant fresher certifications only.
-- ACHIEVEMENTS: For each, explain what was LEARNED or what PROJECT was completed to earn it.
+- PROJECTS: Select 2 projects. Rewrite descriptions to be "Intermediate-level" by focusing on optimization, automation, and quantitative results.
+- CERTIFICATIONS: Pick MAX 2-3 relevant fresher certifications.
+- ACHIEVEMENTS: For each, add a sentence: "Developed [Skill/Project] during this certification which resulted in [Outcome/Learning]."
 
 <!DOCTYPE html>
 <html>
@@ -72,22 +73,22 @@ SECTION INSTRUCTIONS:
   </div>
 
   <h2>Professional Summary</h2>
-  <div class="section">[Write summary focusing on fast learning and technical growth]</div>
+  <div class="section">[Write summary here]</div>
 
   <h2>Technical Skills</h2>
-  <div class="section">[Group skills logically based on JD]</div>
+  <div class="section">[List skills here]</div>
 
   <h2>Work Experience</h2>
   <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong> - ${exp.company} (${exp.duration})<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
   <h2>Projects</h2>
-  <div class="section">[AI: Tailor 2 projects from profile to the JD here]</div>
+  <div class="section">[AI: Insert 2 tailored high-impact projects here]</div>
 
   <h2>Certifications</h2>
-  <div class="section"><ul>[AI: List 2-3 relevant certifications]</ul></div>
+  <div class="section"><ul>[AI: Insert 2-3 relevant certifications]</ul></div>
 
   <h2>Key Achievements & Learning Outcomes</h2>
-  <div class="section"><ul>[AI: List achievements with learning sentences]</ul></div>
+  <div class="section"><ul>[AI: Insert achievements here]</ul></div>
 
   <h2>Education</h2>
   <div class="section">${userProfile.education.degree} - ${userProfile.education.institution} (${userProfile.education.year})</div>
