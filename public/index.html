@@ -128,6 +128,20 @@
         .app-grid { display: block; margin: 0; padding: 0; }
         #resume-output { display: block !important; border: none; padding: 0; }
     }
+
+
+    @media print {
+    @page {
+        margin: 0; /* This removes default headers and footers */
+    }
+    body {
+        margin: 1.6cm; /* This adds margin back to your content so it isn't cut off */
+    }
+    .no-print { display: none !important; }
+    body { background: white; }
+    .app-grid { display: block; margin: 0; padding: 0; }
+    #resume-output { display: block !important; border: none; padding: 0; }
+}
 </style></head>
 <body>
 
