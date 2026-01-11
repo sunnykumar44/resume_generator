@@ -168,9 +168,16 @@
 </div>
 
 <script>
-const API_URL = "/api/generateResume";
+    const API_URL = "/api/generateResume";
+
     // 1. GENERATE RESUME
     async function generate() {
+        // --- ADDED SECURITY PIN CHECK ---
+        const pin = prompt("Enter Admin PIN:");
+        if (pin !== "your-secret-code") { // Replace 'your-secret-code' with your actual PIN
+            return alert("Unauthorized: Incorrect PIN");
+        }
+
         const jd = document.getElementById('jobDescription').value;
         const strategy = document.getElementById('strategy').value;
         const btn = document.getElementById('generateBtn');
@@ -188,7 +195,6 @@ const API_URL = "/api/generateResume";
             const res = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // Sending strategy to backend for Prompt Tuning
                 body: JSON.stringify({ jobDescription: jd, strategy: strategy })
             });
 
