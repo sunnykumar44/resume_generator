@@ -48,13 +48,6 @@ STRATEGY: ${strategyMap[strategy]}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: Helvetica, Arial, sans-serif; line-height: 1.5; color: #1a202c; max-width: 210mm; margin: 0 auto; padding: 12mm; }
   
-  /* FORCE CENTER ON HEADER */
-  .header-box { text-align: center !important; width: 100%; margin-bottom: 15px; display: block; }
-  
-  h1 { font-size: 30px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 5px; }
-  .contact-line { font-size: 10px; color: #4a5568; }
-  .contact-line a { color: #2b6cb0; text-decoration: none; margin: 0 4px; }
-  
   h2 { font-size: 13px; margin: 15px 0 6px; border-bottom: 1.5px solid #2b6cb0; color: #1a365d; text-transform: uppercase; letter-spacing: 1px; }
   .section { margin-bottom: 10px; font-size: 10.5px; }
   ul { margin-left: 18px; }
@@ -65,13 +58,15 @@ STRATEGY: ${strategyMap[strategy]}
 </head>
 <body>
 
-  <div class="header-box">
-    <h1>${userProfile.name}</h1>
-    <div class="contact-line">
-      <a href="mailto:${userProfile.email}">${userProfile.email}</a> | 
+  <div style="text-align: center !important; width: 100% !important; display: block !important; margin-bottom: 15px;">
+    <h1 style="font-size: 30px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 5px; display: block; text-align: center;">
+      ${userProfile.name}
+    </h1>
+    <div style="font-size: 10px; color: #4a5568; display: block; text-align: center;">
+      <a href="mailto:${userProfile.email}" style="color: #2b6cb0; text-decoration: none; margin: 0 4px;">${userProfile.email}</a> | 
       ${userProfile.phone} | 
-      <a href="${userProfile.linkedin}">LinkedIn</a> | 
-      <a href="${userProfile.github}">GitHub</a>
+      <a href="${userProfile.linkedin}" style="color: #2b6cb0; text-decoration: none; margin: 0 4px;">LinkedIn</a> | 
+      <a href="${userProfile.github}" style="color: #2b6cb0; text-decoration: none; margin: 0 4px;">GitHub</a>
     </div>
   </div>
 
@@ -98,26 +93,29 @@ STRATEGY: ${strategyMap[strategy]}
     `).join("")}
   </div>
 
-  <h2>Selected Projects</h2>
+  <h2>Projects</h2>
   <div class="section">[AI: 2 Projects]</div>
 
   <h2>Certifications</h2>
   <div class="section">[AI: Certs]</div>
 
   <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #eee; padding-top:10px;">
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0;">[Trait 1]</div>
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0;">[Trait 2]</div>
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0;">[Trait 3]</div>
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0;">[Trait 4]</div>
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform: uppercase;">[Trait 1]</div>
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform: uppercase;">[Trait 2]</div>
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform: uppercase;">[Trait 3]</div>
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform: uppercase;">[Trait 4]</div>
   </div>
 
 </body>
-</html>`;
+</html>\`;
 
     const result = await model.generateContent(prompt);
     let html = result.response.text();
-    html = html.replace(/```html|```/g, "");
-    html = html.substring(html.indexOf("<!DOCTYPE html>"));
+    html = html.replace(/\\\`\\\`\\\`html|\\\`\\\`\\\`/g, "");
+    const htmlIndex = html.indexOf("<!DOCTYPE html>");
+    if (htmlIndex !== -1) {
+        html = html.substring(htmlIndex);
+    }
 
     return res.status(200).json({ success: true, resume: html });
 
