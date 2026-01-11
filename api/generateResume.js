@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Updated to a standard stable model name if needed, or keep your preview version
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
@@ -66,8 +66,7 @@ OUTPUT RULES:
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Helvetica', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 210mm; margin: 0 auto; padding: 10mm; }
-/* UPDATED: Added width: 100% to ensure centering works perfectly */
-h1 { width: 100%; font-size: 32px; font-weight: 700; margin-bottom: 5px; text-align: center; color: #1a365d; text-transform: uppercase; }
+h1 { font-size: 32px; font-weight: 700; margin-bottom: 5px; text-align: center; color: #1a365d; text-transform: uppercase; }
 .contact { text-align: center; font-size: 10px; margin-bottom: 15px; color: #666; }
 .contact a { color: #2b6cb0; text-decoration: none; margin: 0 5px; }
 h2 { font-size: 14px; color: #1a365d; border-bottom: 1.5px solid #2b6cb0; margin: 15px 0 8px 0; text-transform: uppercase; letter-spacing: 1px; }
@@ -81,7 +80,7 @@ ul { margin-left: 18px; }
 </style>
 </head>
 <body>
-<h1>Sunny Kumar</h1>
+<h1>${userProfile.name}</h1>
 <div class="contact">
   <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
   <a href="${userProfile.linkedin}">LinkedIn</a> | 
