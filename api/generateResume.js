@@ -84,8 +84,13 @@ ul { margin-left: 18px; }
 </head>
 <body>
 
-<h1>${userProfile.name}</h1>
-<div class="contact">
+/* Ensure this is inside your api/generateResume.js file */
+
+<h1 style="text-align: center; width: 100%; font-size: 32px; font-weight: 700; color: #1a365d; text-transform: uppercase;">
+  ${userProfile.name}
+</h1>
+
+<div style="text-align: center; width: 100%; font-size: 10px; margin-bottom: 15px;">
   <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
   <a href="${userProfile.linkedin}">LinkedIn</a> | 
   <a href="${userProfile.github}">GitHub</a>
