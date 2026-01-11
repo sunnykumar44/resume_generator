@@ -3,124 +3,144 @@ import fs from "fs";
 import path from "path";
 
 export default async function handler(req, res) {
-  // 1. Vercel CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
-  const strategy = req.body?.strategy || "ats";
+  const { jobDescription, strategy = "ats", pin } = req.body?.data || req.body;
 
-  if (!jobDescription) {
-    return res.status(400).json({ error: "Missing jobDescription parameter." });
+  if (!pin || pin !== process.env.APP_PIN) {
+    return res.status(401).json({ error: "Unauthorized: Invalid PIN" });
   }
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    
-    // FIXED: Use the exact ID from your listModels results
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
-    // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
     const strategyMap = {
-      ats: "Focus on machine-readable keywords and clean formatting.",
-      faang: "Focus on scale, impact, and high-level quantitative metrics.",
-      startup: "Focus on versatility, building from 0 to 1, and speed."
+      ats: "Focus on ATS-friendly keywords and clean formatting.",
+      faang: "Emphasize scale, ownership, and measurable impact.",
+      startup: "Emphasize versatility, speed, and ownership."
     };
 
-    // 5. Prompt Logic - Updated for Dynamic Projects, Certs, and Achievements
-    const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer. Create a high-impact resume for a FRESHER.
+    // Corrected template literal structure
+    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. No markdown. No conversational text.
 
-===== APPLICANT DATA =====
-Profile: ${JSON.stringify(userProfile)}
+===== PROFILE =====
+${JSON.stringify(userProfile)}
 
 ===== JOB DESCRIPTION =====
 ${jobDescription}
 
-STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
-
-DYNAMIC CONTENT RULES:
-- PROJECTS: Select 2 projects from the profile. Rewrite the descriptions to align with the keywords and role requirements in the Job Description.
-- CERTIFICATIONS: List MAX 2-3 certifications relevant to freshers and this specific role.
-- ACHIEVEMENTS: Include 3-4 achievements. For certifications, add 1-2 lines explaining the specific project or skill learned to earn it.
-
-OUTPUT RULES:
-1. Your FIRST line must be: <!DOCTYPE html>
-2. ONLY output the HTML resume.
-3. The name "${userProfile.name}" must be the first visible text.
+STRATEGY: ${strategyMap[strategy]}
 
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 210mm; margin: 0 auto; padding: 10mm; }
-h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; text-align: center; color: #2c3e50; }
-.contact { text-align: center; font-size: 11px; margin-bottom: 15px; }
-.contact a { color: #3498db; text-decoration: none; margin: 0 8px; }
-h2 { font-size: 16px; color: #2c3e50; border-bottom: 2px solid #3498db; margin: 15px 0 8px 0; padding-bottom: 3px; }
-.section { margin-bottom: 12px; }
-.section p, .section li { font-size: 11px; margin: 3px 0; }
-ul { margin-left: 20px; }
-li { margin: 2px 0; }
-.skills { display: flex; flex-wrap: wrap; gap: 8px; }
-.skill { background: #ecf0f1; padding: 4px 10px; border-radius: 3px; font-size: 10px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { 
+    font-family: 'Helvetica', 'Arial', sans-serif; 
+    line-height: 1.4; 
+    color: #1a202c; 
+    max-width: 210mm; 
+    margin: 0 auto; 
+    padding: 10mm; 
+  }
+  
+  .edu-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: baseline; 
+    width: 100%; 
+  }
+
+  h2 { 
+    font-size: 13px; 
+    margin: 15px 0 6px; 
+    border-bottom: 1.5px solid #2b6cb0; 
+    color: #1a365d; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+  }
+  .section { margin-bottom: 8px; font-size: 10.5px; }
+  ul { margin-left: 18px; }
+  p { margin-bottom: 2px; }
 </style>
 </head>
 <body>
-<h1>${userProfile.name}</h1>
-<div class="contact">
-<a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
-<a href="${userProfile.linkedin}">LinkedIn</a> | 
-<a href="${userProfile.github}">GitHub</a>
-</div>
 
-<h2>Professional Summary</h2>
-<div class="section"><p>[Write tailored summary based on JD]</p></div>
+  <div style="width: 100%; text-align: center !important; margin-bottom: 20px;">
+    <h1 style="font-size: 32px; font-weight: 800; color: #1a365d; text-transform: uppercase; display: block; width: 100%; text-align: center;">
+      ${userProfile.name}
+    </h1>
+    <div style="font-size: 11px; color: #4a5568; width: 100%; text-align: center; margin-top: 5px;">
+      <a href="mailto:${userProfile.email}" style="color: #2b6cb0; text-decoration: none;">${userProfile.email}</a> | 
+      ${userProfile.phone} | 
+      <a href="${userProfile.linkedin}" style="color: #2b6cb0; text-decoration: none;">LinkedIn</a> | 
+      <a href="${userProfile.github}" style="color: #2b6cb0; text-decoration: none;">GitHub</a>
+    </div>
+  </div>
 
-<h2>Technical Skills</h2>
-<div class="section skills">[AI: Add skill badges relevant to job]</div>
+  <h2>Professional Summary</h2>
+  <div class="section"><p>[AI: Tailored summary]</p></div>
 
-<h2>Education</h2>
-<div class="section"><p><strong>${userProfile.education.degree}</strong><br>${userProfile.education.institution}<br>Graduation: ${userProfile.education.year}</p></div>
+  <h2>Technical Skills</h2>
+  <div class="section">[AI: Badges]</div>
 
-<h2>Work Experience</h2>
-<div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
+  <h2>Education</h2>
+  <div class="section">
+    <p><strong>${userProfile.education.degree}</strong></p>
+    <div class="edu-row">
+      <span>${userProfile.education.institution}, Hyderabad</span>
+      <span style="font-weight:bold;">${userProfile.education.year}</span>
+    </div>
+  </div>
 
-<h2>Projects</h2>
-<div class="section">[AI: Insert 2 projects tailored to JD]</div>
+  <h2>Work Experience</h2>
+  <div class="section">
+    ${userProfile.experience.map(e => `
+      <p><strong>${e.title}</strong><br/>${e.company} | ${e.duration}</p>
+      <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
+    `).join("")}
+  </div>
 
-<h2>Certifications</h2>
-<div class="section"><ul>[AI: List 2-3 JD-relevant certifications]</ul></div>
+  <h2>Key Projects</h2>
+  <div class="section">[AI: 2 Projects]</div>
 
-<h2>Achievements</h2>
-<div class="section"><ul>[AI: List achievements with 1-2 lines on learning outcome]</ul></div>
+  <h2>Certifications</h2>
+  <div class="section">[AI: Relevant Certs]</div>
+
+  <div style="display:flex; justify-content:space-between; margin-top:25px; border-top:1px solid #eee; padding-top:12px;">
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
+    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
+  </div>
+
 </body>
 </html>`;
 
     const result = await model.generateContent(prompt);
-    let responseText = result.response.text();
+    let html = result.response.text();
     
-    responseText = responseText.replace(/```html|```/g, '');
-    const htmlStart = responseText.indexOf('<!DOCTYPE html>');
-    if (htmlStart > -1) {
-      responseText = responseText.substring(htmlStart);
+    html = html.replace(/```html|```/g, "");
+    const startIndex = html.indexOf("<!DOCTYPE html>");
+    if (startIndex !== -1) {
+      html = html.substring(startIndex);
     }
 
-    return res.status(200).json({ success: true, resume: responseText });
+    return res.status(200).json({ success: true, resume: html });
 
-  } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).json({ error: error.message });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 }
-
-////working
