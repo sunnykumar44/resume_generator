@@ -84,7 +84,7 @@ ul { margin-left: 18px; }
 </head>
 <body>
 
-/* Ensure this is inside your api/generateResume.js file */
+
 
 <h1 style="text-align: center; width: 100%; font-size: 32px; font-weight: 700; color: #1a365d; text-transform: uppercase;">
   ${userProfile.name}
