@@ -94,7 +94,12 @@ ul { margin-left: 18px; }
 <div class="section skills">[AI: JD-relevant badges]</div>
 
 <h2>Education</h2>
-<div class="section"><p><strong>${userProfile.education.degree}</strong><br>${userProfile.education.institution} | ${userProfile.education.year}</p></div>
+<div class="section">
+  <p>
+    <strong>${userProfile.education.institution}</strong>, ${userProfile.education.location || ''} ${userProfile.education.year}
+    <br>${userProfile.education.degree}
+  </p>
+</div>
 
 <h2>Work Experience</h2>
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
