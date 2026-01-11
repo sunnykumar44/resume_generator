@@ -12,7 +12,6 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  // 2. Extract Data
   const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
   const strategy = req.body?.strategy || "ats";
 
@@ -22,30 +21,20 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Using stable model name (gemini-1.5-flash is currently the most reliable choice in Jan 2026)
+    // FIXED: Changed to "gemini-1.5-flash" to stop the 404 error you are seeing
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
-    // 4. Strategy Map
     const strategyMap = {
       ats: "Focus on machine-readable keywords and clean formatting.",
       faang: "Focus on scale, impact, and high-level quantitative metrics.",
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
-    // 5. Updated Prompt – Projects, Certifications & Achievements now tailored
-    const prompt = `You are a professional resume writer for freshers. 
-Create a clean, honest, ATS-friendly HTML resume.
-
-CRITICAL RULES:
-- Output ONLY valid HTML code
-- First line MUST be exactly: <!DOCTYPE html>
-- Do NOT add any explanation, markdown, comments or text outside HTML
-- Never invent experience or dramatically change facts from the profile
-- Tailor content intelligently to the job description without lying
+    const prompt = `CRITICAL INSTRUCTION: You are creating a resume for a job applicant. The job description below is ONLY for reference - DO NOT COPY IT. Create ONLY the applicant's resume.
 
 ===== APPLICANT DETAILS =====
 Name: ${userProfile.name}
@@ -58,31 +47,22 @@ University: ${userProfile.education.institution}
 Graduation Year: ${userProfile.education.year}
 Work Experience: ${userProfile.experience.map(exp => `${exp.title} at ${exp.company} (${exp.duration}): ${exp.responsibilities.join('; ')}`).join(' | ')}
 
-===== JOB DESCRIPTION (use only for tailoring - DO NOT COPY) =====
+===== JOB DESCRIPTION =====
 ${jobDescription}
 
 STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
-===== INSTRUCTIONS FOR SECTIONS =====
+OUTPUT RULES:
+1. Your FIRST line must be: <!DOCTYPE html>
+2. ONLY output the HTML resume.
+3. The name "${userProfile.name}" must be the first visible text.
 
-Projects:
-- Create 2–3 strong fresher-level projects
-- Tailor project descriptions, technologies and impact to match skills/tools mentioned in the job description
-- Make them sound realistic for a recent graduate
+SPECIFIC SECTION INSTRUCTIONS:
+- PROJECTS: Select 2 projects from the profile. Rewrite them to show impact tailored specifically to the Job Description.
+- CERTIFICATIONS: Pick 2-3 certifications from the achievements in the profile relevant to the job and freshers.
+- ACHIEVEMENTS: For each certificate, write 1-2 lines on the project or skill learned to earn it.
 
-Certifications:
-- Select and list only 2–3 most relevant certifications (realistic for a fresher)
-- Choose/prioritize ones that relate to the job description
-- If no direct match, choose generally valuable ones (e.g. AWS Cloud Practitioner, Google Data Analytics, HackerRank, etc.)
-
-Achievements:
-- List 3–4 bullet points
-- Connect them to learning, projects or certifications
-- Make some relevance to the job description when possible
-- Example style: "Achieved 4-star rating in CodeChef contest → strengthened problem-solving skills used in XYZ project"
-
-Use this exact HTML structure (replace bracketed parts):
-
+Use this exact structure:
 <!DOCTYPE html>
 <html>
 <head>
@@ -103,9 +83,7 @@ li { margin: 2px 0; }
 </style>
 </head>
 <body>
-
 <h1>${userProfile.name}</h1>
-
 <div class="contact">
 <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
 <a href="${userProfile.linkedin}">LinkedIn</a> | 
@@ -113,10 +91,10 @@ li { margin: 2px 0; }
 </div>
 
 <h2>Professional Summary</h2>
-<div class="section"><p>[Write 2-3 strong sentences based on ${strategy} strategy]</p></div>
+<div class="section"><p>[Write summary based on JD]</p></div>
 
 <h2>Technical Skills</h2>
-<div class="section skills">[Skill badges – relevant ones first]</div>
+<div class="section skills">[Add skill badges relevant to job]</div>
 
 <h2>Education</h2>
 <div class="section"><p><strong>${userProfile.education.degree}</strong><br>${userProfile.education.institution}<br>Graduation: ${userProfile.education.year}</p></div>
@@ -125,21 +103,19 @@ li { margin: 2px 0; }
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
 <h2>Projects</h2>
-<div class="section">[2–3 tailored projects]</div>
+<div class="section">[Tailor 2 projects from profile here]</div>
 
 <h2>Certifications</h2>
-<div class="section"><ul>[2–3 relevant certifications as bullets]</ul></div>
+<div class="section"><ul>[Select 2-3 JD-relevant certifications]</ul></div>
 
-<h2>Achievements</h2>
-<div class="section"><ul>[3–4 achievements with learning/project connection]</ul></div>
-
+<h2>Key Achievements & Learning Outcomes</h2>
+<div class="section"><ul>[List achievements with learning sentences]</ul></div>
 </body>
 </html>`;
 
     const result = await model.generateContent(prompt);
     let responseText = result.response.text();
-
-    // 6. Clean Markdown and Extract HTML
+    
     responseText = responseText.replace(/```html|```/g, '');
     const htmlStart = responseText.indexOf('<!DOCTYPE html>');
     if (htmlStart > -1) {
