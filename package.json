@@ -1,0 +1,10 @@
+{
+  "name": "job-resume-generator",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node api/generateResume.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
+  }
+}

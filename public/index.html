@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Ultimate AI Resume Generator</title>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #059669;
+            --bg: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        /* Layout */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .main-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Components */
+        h1 { font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
+        
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: inherit;
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; margin-top: 10px; }
+
+        /* History Sidebar */
+        .history-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .history-item:hover { background: #f8fafc; }
+
+        /* Resume Output (The A4 Look) */
+        #resume-output {
+            margin-top: 30px;
+            padding: 40px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            min-height: 500px;
+            display: none;
+        }
+
+        /* Loading */
+        #loading { display: none; text-align: center; margin: 20px 0; }
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .app-grid { display: block; margin: 0; padding: 0; }
+            #resume-output { display: block !important; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-grid">
+    <div class="main-card">
+        <h1 class="no-print">🚀 AI Resume Engine</h1>
+        
+        <div class="no-print">
+            <label>Job Description</label>
+            <textarea id="jobDescription" placeholder="Paste the job requirements here..."></textarea>
+
+            <label>Target Strategy</label>
+            <select id="strategy">
+                <option value="ats">🔥 ATS-Optimized (Keywords focused)</option>
+                <option value="faang">🏢 FAANG Style (Impact & Metrics)</option>
+                <option value="startup">🦄 Startup Style (Versatility & Speed)</option>
+            </select>
+
+            <button id="generateBtn" class="btn btn-primary" onclick="generate()">Generate Tailored Resume</button>
+            
+            <div id="loading">
+                <div class="spinner"></div>
+                <p>Crafting your future...</p>
+            </div>
+        </div>
+
+        <div id="resume-output"></div>
+        <button id="downloadBtn" class="btn btn-success no-print" style="display:none;" onclick="downloadPDF()">📥 Download PDF</button>
+    </div>
+
+    <div class="sidebar no-print">
+        <div class="history-card">
+            <h2 style="font-size: 1rem; margin-bottom: 15px;">Recent Resumes</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = "/api/generateResume";
+    // 1. GENERATE RESUME
+    async function generate() {
+        const jd = document.getElementById('jobDescription').value;
+        const strategy = document.getElementById('strategy').value;
+        const btn = document.getElementById('generateBtn');
+        const loader = document.getElementById('loading');
+        const output = document.getElementById('resume-output');
+        const dlBtn = document.getElementById('downloadBtn');
+
+        if(!jd) return alert("Please paste a Job Description");
+
+        btn.disabled = true;
+        loader.style.display = "block";
+        output.style.display = "none";
+
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                // Sending strategy to backend for Prompt Tuning
+                body: JSON.stringify({ jobDescription: jd, strategy: strategy })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            // Display Output
+            output.innerHTML = data.resume;
+            output.style.display = "block";
+            dlBtn.style.display = "block";
+
+            // Save to History
+            saveToHistory(jd.substring(0, 30) + "...", data.resume);
+
+            // AUTO DOWNLOAD (only once per session)
+            if (!sessionStorage.getItem("autoDownloaded")) {
+                sessionStorage.setItem("autoDownloaded", "true");
+                setTimeout(() => { downloadPDF(); }, 1000);
+            }
+
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            btn.disabled = false;
+            loader.style.display = "none";
+        }
+    }
+
+    // 2. AUTO PDF DOWNLOAD (Via Print)
+    function downloadPDF() {
+        window.print();
+    }
+
+    // 3. HISTORY SAVE (LocalStorage)
+    function saveToHistory(label, html) {
+        let history = JSON.parse(localStorage.getItem('resume_history') || '[]');
+        history.unshift({ label, html, date: new Date().toLocaleDateString() });
+        history = history.slice(0, 10); // Keep last 10
+        localStorage.setItem('resume_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        const history = JSON.parse(localStorage.getItem('resume_history') || '[]');
+        list.innerHTML = history.map((item, index) => `
+            <div class="history-item" onclick="loadHistory(${index})">
+                <strong>${item.label}</strong><br>
+                <small>${item.date}</small>
+            </div>
+        `).join('');
+    }
+
+    function loadHistory(index) {
+        const history = JSON.parse(localStorage.getItem('resume_history') || '[]');
+        const output = document.getElementById('resume-output');
+        output.innerHTML = history[index].html;
+        output.style.display = "block";
+        document.getElementById('downloadBtn').style.display = "block";
+        output.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Initialize
+    renderHistory();
+</script>
+</body>
+</html>

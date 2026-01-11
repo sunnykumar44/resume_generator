@@ -1,0 +1,24 @@
+{
+  "name": "Sunny Kumar",
+  "phone": "+91-9346136651",
+  "email": "sunnyskumar70@gmail.com",
+  "linkedin": "www.linkedin.com/in/sunnykumar44",
+  "github": "www.github.com/sunnykumar44",
+  "education": {
+    "degree": "Bachelor of Technology in Electronics and Communication Engineering",
+    "institution": "Malla Reddy Institute of Engineering and Technology, Hyderabad",
+    "year": "2023"
+  },
+  "experience": [
+    {
+      "title": "Data Analyst Intern",
+      "company": "AICTE, Microsoft",
+      "location": "Hyderabad, Telangana",
+      "duration": "12/2024 - 02/2025",
+      "responsibilities": [
+        "Analyzed retail data with statistical analysis, creating data visualizations that boosted customer retention by 20%.",
+        "Constructed predictive models in Python and SQL, improving operational efficiency by 15%."
+      ]
+    }
+  ]
+}
