@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 
 export default async function handler(req, res) {
-  // 1. Vercel CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -12,7 +11,6 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  // 2. Extract Data
   const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
   const strategy = req.body?.strategy || "ats";
 
@@ -22,20 +20,18 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // Keeping your model exactly as you have it
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
 
-    // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
-    // 4. Strategy Map
     const strategyMap = {
       ats: "Focus on machine-readable keywords and clean formatting.",
       faang: "Focus on scale, impact, and high-level quantitative metrics.",
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
-    // 5. Prompt Logic (ONLY adding your requested section instructions)
     const prompt = `CRITICAL INSTRUCTION: You are creating a resume for a job applicant. The job description below is ONLY for reference - DO NOT COPY IT. Create ONLY the applicant's resume.
 
 ===== APPLICANT DETAILS =====
@@ -61,7 +57,7 @@ OUTPUT RULES:
 3. The name "${userProfile.name}" must be the first visible text.
 
 INSTRUCTIONS FOR DYNAMIC SECTIONS:
-- PROJECTS: Select 2 projects from the profile. Change the descriptions according to the job role/description.
+- PROJECTS: Select 2 projects from the profile. Change the descriptions according to the job role/description to make them relevant.
 - CERTIFICATIONS: List max 2 or 3 certifications only. They should be related to freshers and relevant to the job description.
 - ACHIEVEMENTS: Include 3-4 achievements. For those related to certifications, add a small 1-2 line description about what was learned through the project and certification.
 
@@ -76,7 +72,7 @@ body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width:
 h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; text-align: center; color: #2c3e50; }
 .contact { text-align: center; font-size: 11px; margin-bottom: 15px; }
 .contact a { color: #3498db; text-decoration: none; margin: 0 8px; }
-h2 { font-size: 16px; color: #2c3050; border-bottom: 2px solid #3498db; margin: 15px 0 8px 0; padding-bottom: 3px; }
+h2 { font-size: 16px; color: #2c3e50; border-bottom: 2px solid #3498db; margin: 15px 0 8px 0; padding-bottom: 3px; }
 .section { margin-bottom: 12px; }
 .section p, .section li { font-size: 11px; margin: 3px 0; }
 ul { margin-left: 20px; }
@@ -107,20 +103,20 @@ li { margin: 2px 0; }
 
 <h2>Projects</h2>
 <div class="section">
-  [AI: Insert 2 tailored projects here]
+  [AI: Insert 2 tailored projects from the profile here based on the JD]
 </div>
 
 <h2>Certifications</h2>
 <div class="section">
   <ul>
-    [AI: Insert 2-3 fresher-level certifications here]
+    [AI: Insert 2-3 JD-relevant certifications here]
   </ul>
 </div>
 
 <h2>Achievements</h2>
 <div class="section">
   <ul>
-    [AI: Insert 3-4 achievements here with learning descriptions for certs]
+    [AI: Insert 3-4 achievements here with learning outcome lines for certifications]
   </ul>
 </div>
 </body>
