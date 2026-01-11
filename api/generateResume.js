@@ -12,8 +12,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
-  const strategy = req.body?.strategy || "ats";
+  // UPDATED: Extract pin along with other data
+  const { jobDescription, strategy = "ats", pin } = req.body?.data || req.body;
+
+  // SECURITY CHECK: Match the incoming PIN with your secret Vercel variable
+  if (!pin || pin !== process.env.APP_PIN) {
+    return res.status(401).json({ error: "Unauthorized: Invalid PIN." });
+  }
 
   if (!jobDescription) {
     return res.status(400).json({ error: "Missing jobDescription parameter." });
