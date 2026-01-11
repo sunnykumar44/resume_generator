@@ -169,13 +169,17 @@
 
 <script>
     const API_URL = "/api/generateResume";
-    const ADMIN_PIN = "8080"; // Unified PIN for generate and history
+    const ADMIN_PIN = "8080"; 
 
     // 1. GENERATE RESUME
     async function generate() {
         // PIN CHECK
         const userInput = prompt("Enter Admin PIN:");
-        if (!userInput || userInput.trim() !== ADMIN_PIN) { 
+        
+        // EXIT QUIETLY IF CANCEL IS CLICKED
+        if (userInput === null) return;
+
+        if (userInput.trim() !== ADMIN_PIN) { 
             return alert("Unauthorized: Incorrect PIN");
         }
 
@@ -196,7 +200,6 @@
             const res = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // Added PIN to the request so the backend can also verify it
                 body: JSON.stringify({ jobDescription: jd, strategy: strategy, pin: ADMIN_PIN })
             });
 
@@ -247,11 +250,14 @@
         `).join('');
     }
 
-    // UPDATED: Added PIN check to protect recent resumes
+    // PROTECTED HISTORY ACCESS WITH SILENT CANCEL
     function loadHistory(index) {
         const userInput = prompt("Enter Admin PIN to view recent resume:");
         
-        if (!userInput || userInput.trim() !== ADMIN_PIN) { 
+        // EXIT QUIETLY IF CANCEL IS CLICKED
+        if (userInput === null) return;
+
+        if (userInput.trim() !== ADMIN_PIN) { 
             return alert("Unauthorized: Incorrect PIN");
         }
 
