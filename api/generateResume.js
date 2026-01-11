@@ -1,111 +1,197 @@
+// pages/api/generate-resume.js    or    app/api/generate-resume/route.js
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import fs from "fs";
-import path from "path";
+
+export const config = {
+  maxDuration: 60, // Vercel serverless function timeout (seconds)
+};
 
 export default async function handler(req, res) {
-  // 1. Vercel CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  // ── CORS Headers ───────────────────────────────────────────────
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", "*"); // ← change to your domain in prod
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+  );
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-  const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
-  const strategy = req.body?.strategy || "ats";
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  // ── Input validation ───────────────────────────────────────────
+  const { jobDescription, strategy = "ats", profile } = req.body || {};
 
   if (!jobDescription) {
-    return res.status(400).json({ error: "Missing jobDescription parameter." });
+    return res.status(400).json({ error: "jobDescription is required" });
+  }
+
+  // Use profile from body (recommended) or fallback to hardcoded minimal profile
+  const userProfile = profile || {
+    name: "Your Name",
+    email: "your.email@example.com",
+    phone: "+91 99999 99999",
+    linkedin: "https://linkedin.com/in/your-profile",
+    education: {
+      degree: "B.Tech Computer Science",
+      institution: "Your University",
+      year: "2024",
+    },
+    experience: [],
+    // You can add default projects/certifications/skills here if needed
+  };
+
+  // ── Early exit if API key missing ──────────────────────────────
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY is not set in environment variables");
+    return res.status(500).json({
+      error: "Server configuration error - API key missing",
+    });
   }
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // FIXED: Using "gemini-1.5-flash" to avoid the 404 Beta version error
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); 
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
+    });
 
-    const profilePath = path.join(process.cwd(), "profile.json");
-    const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
-
+    // ── Strategy selection ───────────────────────────────────────
     const strategyMap = {
-      ats: "Focus on entry-level keywords, clean layout, and specific technical skills.",
-      faang: "Focus on impact metrics, scale, and specific problem-solving impact.",
-      startup: "Focus on versatility, fast learning, and end-to-end project ownership."
+      ats: "Focus on entry-level keywords, clean layout, ATS-friendly format, specific technical skills and tools mentioned in JD.",
+      faang: "Emphasize metrics, measurable impact, problem-solving, system design thinking, coding proficiency even for freshers.",
+      startup: "Highlight versatility, ownership, building from 0 to 1, fast learning, wearing multiple hats.",
     };
 
-    const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer. Create a resume for a FRESHER that demonstrates UPTO INTERMEDIATE-LEVEL skills.
+    const selectedStrategy = strategyMap[strategy] || strategyMap.ats;
 
-===== APPLICANT DATA =====
-Profile: ${JSON.stringify(userProfile)}
+    const prompt = `
+You are an expert resume writer specializing in freshers (0-1 year experience).
+Create a strong, honest, ATS-friendly single-column HTML resume.
 
-===== JOB DESCRIPTION =====
+CRITICAL RULES:
+- Output **ONLY** valid complete HTML starting with <!DOCTYPE html>
+- Do NOT add any explanations, markdown fences, comments or extra text outside HTML
+- Keep total length reasonable - aim for one page feeling
+- Use only information from the provided profile + reasonable tailoring
+- Never invent experience, projects or skills that aren't realistic for a fresher
+
+===== USER PROFILE DATA =====
+${JSON.stringify(userProfile, null, 2)}
+
+===== TARGET JOB DESCRIPTION =====
 ${jobDescription}
 
-STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
+===== WRITING STRATEGY =====
+${selectedStrategy}
 
-OUTPUT RULES:
-1. ONLY output HTML starting with <!DOCTYPE html>.
-2. FORMAT: Professional single-column layout.
-
-SECTION INSTRUCTIONS:
-- PROJECTS: Select 2 projects. Rewrite descriptions to be "Intermediate-level" by focusing on optimization, automation, and quantitative results.
-- CERTIFICATIONS: Pick MAX 2-3 relevant fresher certifications.
-- ACHIEVEMENTS: For each, add a sentence: "Developed [Skill/Project] during this certification which resulted in [Outcome/Learning]."
+===== OUTPUT STRUCTURE (follow exactly) =====
+Use this layout and replace bracketed content with real content:
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8" />
+<title>${userProfile.name} - Resume</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-  h1 { font-size: 28px; text-align: center; color: #1a365d; text-transform: uppercase; }
-  .contact { text-align: center; font-size: 11px; margin-bottom: 20px; border-bottom: 1px solid #cbd5e0; padding-bottom: 10px; }
-  h2 { font-size: 16px; color: #2c5282; border-left: 4px solid #2c5282; padding-left: 10px; margin: 20px 0 10px 0; background: #f7fafc; }
-  .section { margin-bottom: 15px; font-size: 11px; }
-  ul { margin-left: 20px; }
-  li { margin-bottom: 4px; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    line-height:1.5; 
+    color:#1f2937; 
+    max-width:800px; 
+    margin:0 auto; 
+    padding:20px 30px; 
+    font-size:11.5pt;
+  }
+  h1 { font-size:22pt; text-align:center; color:#111827; margin-bottom:6px; }
+  .contact { text-align:center; font-size:9.5pt; color:#4b5563; margin-bottom:18px; }
+  h2 { 
+    font-size:13.5pt; 
+    color:#1d4ed8; 
+    border-bottom:2px solid #bfdbfe; 
+    padding-bottom:4px; 
+    margin:20px 0 10px;
+  }
+  .section { margin-bottom:12px; }
+  ul { list-style:none; padding-left:18px; }
+  li { position:relative; margin-bottom:5px; }
+  li:before { content:"•"; position:absolute; left:-12px; color:#1d4ed8; }
+  strong { color:#111827; }
 </style>
 </head>
 <body>
-  <h1>${userProfile.name}</h1>
-  <div class="contact">
-    ${userProfile.email} | ${userProfile.phone} | LinkedIn: ${userProfile.linkedin}
-  </div>
 
-  <h2>Professional Summary</h2>
-  <div class="section">[Write summary here]</div>
+<h1>${userProfile.name}</h1>
+<div class="contact">
+  ${userProfile.email}  •  ${userProfile.phone}  •  LinkedIn: ${userProfile.linkedin || 'linkedin.com/in/your-profile'}
+</div>
 
-  <h2>Technical Skills</h2>
-  <div class="section">[List skills here]</div>
+<h2>Professional Summary</h2>
+<div class="section">[short 4-6 line summary - fast learner, strong fundamentals, quick contributor]</div>
 
-  <h2>Work Experience</h2>
-  <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong> - ${exp.company} (${exp.duration})<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
+<h2>Technical Skills</h2>
+<div class="section">[well-grouped skills, relevant to JD first]</div>
 
-  <h2>Projects</h2>
-  <div class="section">[AI: Insert 2 tailored high-impact projects here]</div>
+<h2>Projects</h2>
+<div class="section">[2-3 strongest projects, tailored, show impact & tech used]</div>
 
-  <h2>Certifications</h2>
-  <div class="section"><ul>[AI: Insert 2-3 relevant certifications]</ul></div>
+<h2>Education</h2>
+<div class="section">${userProfile.education?.degree || "Bachelor of Technology"} - ${userProfile.education?.institution || "Your University"} (${userProfile.education?.year || "2024"})</div>
 
-  <h2>Key Achievements & Learning Outcomes</h2>
-  <div class="section"><ul>[AI: Insert achievements here]</ul></div>
+<h2>Certifications</h2>
+<div class="section"><ul>[only 2-4 most relevant certifications]</ul></div>
 
-  <h2>Education</h2>
-  <div class="section">${userProfile.education.degree} - ${userProfile.education.institution} (${userProfile.education.year})</div>
 </body>
-</html>`;
+</html>
+`;
 
     const result = await model.generateContent(prompt);
-    let responseText = result.response.text();
-    
-    responseText = responseText.replace(/```html|```/g, '');
-    const htmlStart = responseText.indexOf('<!DOCTYPE html>');
-    if (htmlStart > -1) responseText = responseText.substring(htmlStart);
+    let text = result.response.text();
 
-    return res.status(200).json({ success: true, resume: responseText });
+    // Aggressive cleaning - most models add extra junk
+    text = text.replace(/^[\s\S]*?(<!DOCTYPE html>)/i, "$1");
+    text = text.replace(/```html|```/gi, "");
+    text = text.split("<!DOCTYPE html>")[1]
+      ? "<!DOCTYPE html>" + text.split("<!DOCTYPE html>")[1]
+      : text;
+    text = text.trim();
 
+    // Very basic validation - at least starts with doctype
+    if (!text.startsWith("<!DOCTYPE html")) {
+      throw new Error("Model did not return valid HTML");
+    }
+
+    return res.status(200).json({
+      success: true,
+      resume: text,
+    });
   } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error("Resume generation error:", error);
+
+    const status = error?.status || 500;
+    const message =
+      status === 429
+        ? "Rate limit exceeded. Please try again in a few minutes."
+        : error.message.includes("API key")
+        ? "Authentication error - invalid API key"
+        : "Failed to generate resume";
+
+    return res.status(status).json({
+      error: message,
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 }
