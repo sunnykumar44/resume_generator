@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
 import fs from "fs";
+
 import path from "path";
 
 export default async function handler(req, res) {
@@ -22,8 +24,8 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Note: 'gemini-1.5-flash' is used because 'gemini-3-flash' is not a valid/existing model name as of Jan 2026
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Note: 'gemini-1.5-flash-latest' is the stable current production model
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
 
     // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
@@ -36,7 +38,7 @@ export default async function handler(req, res) {
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
-    // 5. Your Original Prompt Logic → only added tailoring instructions
+    // 5. Your Original Prompt Logic + minimal addition only
     const prompt = `CRITICAL INSTRUCTION: You are creating a resume for a job applicant. The job description below is ONLY for reference - DO NOT COPY IT. Create ONLY the applicant's resume.
 
 ===== APPLICANT DETAILS =====
@@ -55,10 +57,11 @@ ${jobDescription}
 
 STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
-===== IMPORTANT TAILORING INSTRUCTIONS =====
-- Projects: Select/create 2-3 realistic fresher projects and tailor their description, technologies and impact to match the job description
-- Certifications: Select only 2-3 most relevant fresher-level certifications that would help for this job description
-- Achievements: Write 3-4 achievements connected to learning, projects or certifications, make them somewhat relevant to the job when possible
+===== SPECIAL INSTRUCTION FOR TAILORING ONLY THESE SECTIONS =====
+Use the job description to guide (not copy) content only in these sections:
+- Projects: make 2-3 realistic fresher projects relevant to the job
+- Certifications: choose 2-3 most useful certifications for this kind of job
+- Achievements: make 3-4 achievements related to learning, projects or certifications, preferably useful for this job
 
 OUTPUT RULES:
 1. Your FIRST line must be: <!DOCTYPE html>
@@ -108,14 +111,8 @@ li { margin: 2px 0; }
 <h2>Work Experience</h2>
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
-<h2>Projects</h2>
-<div class="section">[Add 2-3 realistic projects - tailored to JD]</div>
-
-<h2>Certifications</h2>
-<div class="section"><ul>[Add 2-3 relevant fresher certifications - matched to JD]</ul></div>
-
-<h2>Achievements</h2>
-<div class="section"><ul>[Add 3-4 achievements - connect to learning/certifications/projects, some relevance to JD]</ul></div>
+<h2>Projects</h2>[Add 2-3 realistic projects]
+<h2>Achievements</h2>[Add 3-4 achievements]
 
 </body>
 </html>`;
