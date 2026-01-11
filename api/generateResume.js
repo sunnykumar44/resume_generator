@@ -12,13 +12,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  // UPDATED: Extract pin along with other data
-  const { jobDescription, strategy = "ats", pin } = req.body?.data || req.body;
-
-  // SECURITY CHECK: Match the incoming PIN with your secret Vercel variable
-  if (!pin || pin !== process.env.APP_PIN) {
-    return res.status(401).json({ error: "Unauthorized: Invalid PIN." });
-  }
+  const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
+  const strategy = req.body?.strategy || "ats";
 
   if (!jobDescription) {
     return res.status(400).json({ error: "Missing jobDescription parameter." });
@@ -26,6 +21,8 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    
+    // FIXED: Use the exact ID from your listModels results
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     // 3. Load Sunny's Profile
@@ -38,6 +35,7 @@ export default async function handler(req, res) {
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
+    // 5. Prompt Logic - Updated for Dynamic Projects, Certs, and Achievements
     const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer. Create a high-impact resume for a FRESHER.
 
 ===== APPLICANT DATA =====
@@ -49,15 +47,14 @@ ${jobDescription}
 STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
 DYNAMIC CONTENT RULES:
-- PROJECTS: Select 2 relevant projects. Rewrite descriptions to match JD keywords.
-- CERTIFICATIONS: List MAX 2-3 relevant to freshers and the JD.
-- ACHIEVEMENTS: 3-4 items. For certs, add 1-2 lines on the project/skill learned.
-- QUANTITATIVE IMPACT: Rewrite bullet points to include realistic estimated metrics (e.g., "Increased efficiency by 15%", "Reduced load time by 200ms", "Handled 500+ data points").
-- CHARACTER TRAITS: Select EXACTLY 4 professional character traits related to the JD.
+- PROJECTS: Select 2 projects from the profile. Rewrite the descriptions to align with the keywords and role requirements in the Job Description.
+- CERTIFICATIONS: List MAX 2-3 certifications relevant to freshers and this specific role.
+- ACHIEVEMENTS: Include 3-4 achievements. For certifications, add 1-2 lines explaining the specific project or skill learned to earn it.
 
 OUTPUT RULES:
 1. Your FIRST line must be: <!DOCTYPE html>
-2. ONLY output the HTML resume. No markdown.
+2. ONLY output the HTML resume.
+3. The name "${userProfile.name}" must be the first visible text.
 
 <!DOCTYPE html>
 <html>
@@ -65,59 +62,47 @@ OUTPUT RULES:
 <meta charset="UTF-8">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Helvetica', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 210mm; margin: 0 auto; padding: 10mm; }
-h1 { font-size: 32px; font-weight: 700; margin-bottom: 5px; text-align: center; color: #1a365d; text-transform: uppercase; }
-.contact { text-align: center; font-size: 10px; margin-bottom: 15px; color: #666; }
-.contact a { color: #2b6cb0; text-decoration: none; margin: 0 5px; }
-h2 { font-size: 14px; color: #1a365d; border-bottom: 1.5px solid #2b6cb0; margin: 15px 0 8px 0; text-transform: uppercase; letter-spacing: 1px; }
-.section { margin-bottom: 10px; }
-.section p, .section li { font-size: 10.5px; margin: 2px 0; }
-ul { margin-left: 18px; }
-.skills { display: flex; flex-wrap: wrap; gap: 6px; }
-.skill { background: #edf2f7; padding: 3px 8px; border-radius: 4px; font-size: 9.5px; color: #2d3748; font-weight: 600; }
-.traits-container { display: flex; justify-content: space-around; margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
-.trait { font-size: 11px; font-weight: 700; color: #2b6cb0; text-transform: uppercase; letter-spacing: 1.5px; }
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 210mm; margin: 0 auto; padding: 10mm; }
+h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; text-align: center; color: #2c3e50; }
+.contact { text-align: center; font-size: 11px; margin-bottom: 15px; }
+.contact a { color: #3498db; text-decoration: none; margin: 0 8px; }
+h2 { font-size: 16px; color: #2c3e50; border-bottom: 2px solid #3498db; margin: 15px 0 8px 0; padding-bottom: 3px; }
+.section { margin-bottom: 12px; }
+.section p, .section li { font-size: 11px; margin: 3px 0; }
+ul { margin-left: 20px; }
+li { margin: 2px 0; }
+.skills { display: flex; flex-wrap: wrap; gap: 8px; }
+.skill { background: #ecf0f1; padding: 4px 10px; border-radius: 3px; font-size: 10px; }
 </style>
 </head>
 <body>
 <h1>${userProfile.name}</h1>
 <div class="contact">
-  <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
-  <a href="${userProfile.linkedin}">LinkedIn</a> | 
-  <a href="${userProfile.github}">GitHub</a>
+<a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
+<a href="${userProfile.linkedin}">LinkedIn</a> | 
+<a href="${userProfile.github}">GitHub</a>
 </div>
 
 <h2>Professional Summary</h2>
-<div class="section"><p>[AI: Tailored summary with a focus on ${strategy}]</p></div>
+<div class="section"><p>[Write tailored summary based on JD]</p></div>
 
 <h2>Technical Skills</h2>
-<div class="section skills">[AI: JD-relevant badges]</div>
+<div class="section skills">[AI: Add skill badges relevant to job]</div>
 
 <h2>Education</h2>
-<div class="section">
-  <p>
-    <strong>${userProfile.education.institution}</strong>, ${userProfile.education.location || ''} ${userProfile.education.year}
-    <br>${userProfile.education.degree}
-  </p>
-</div>
+<div class="section"><p><strong>${userProfile.education.degree}</strong><br>${userProfile.education.institution}<br>Graduation: ${userProfile.education.year}</p></div>
+
 <h2>Work Experience</h2>
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
-<h2>Selected Projects</h2>
-<div class="section">[AI: 2 tailored projects with impact metrics]</div>
+<h2>Projects</h2>
+<div class="section">[AI: Insert 2 projects tailored to JD]</div>
 
 <h2>Certifications</h2>
-<div class="section"><ul>[AI: 2-3 JD-relevant certs]</ul></div>
+<div class="section"><ul>[AI: List 2-3 JD-relevant certifications]</ul></div>
 
-<h2>Key Achievements</h2>
-<div class="section"><ul>[AI: Impactful achievements]</ul></div>
-
-<div class="traits-container">
-  <div class="trait">[Trait 1]</div>
-  <div class="trait">[Trait 2]</div>
-  <div class="trait">[Trait 3]</div>
-  <div class="trait">[Trait 4]</div>
-</div>
+<h2>Achievements</h2>
+<div class="section"><ul>[AI: List achievements with 1-2 lines on learning outcome]</ul></div>
 </body>
 </html>`;
 
@@ -137,3 +122,5 @@ ul { margin-left: 18px; }
     return res.status(500).json({ error: error.message });
   }
 }
+
+////working
