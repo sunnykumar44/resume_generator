@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
+  // 2. Extract Data
   const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
   const strategy = req.body?.strategy || "ats";
 
@@ -21,41 +22,67 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // STABLE MODEL: Using gemini-1.5-flash to ensure consistent performance
+    // Using stable model name (gemini-1.5-flash is currently the most reliable choice in Jan 2026)
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
+    // 4. Strategy Map
     const strategyMap = {
       ats: "Focus on machine-readable keywords and clean formatting.",
       faang: "Focus on scale, impact, and high-level quantitative metrics.",
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
-    // 5. Updated Prompt Logic for Dynamic Content
-    const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer. Create a resume for a FRESHER that demonstrates UPTO INTERMEDIATE-LEVEL skills. 
+    // 5. Updated Prompt – Projects, Certifications & Achievements now tailored
+    const prompt = `You are a professional resume writer for freshers. 
+Create a clean, honest, ATS-friendly HTML resume.
+
+CRITICAL RULES:
+- Output ONLY valid HTML code
+- First line MUST be exactly: <!DOCTYPE html>
+- Do NOT add any explanation, markdown, comments or text outside HTML
+- Never invent experience or dramatically change facts from the profile
+- Tailor content intelligently to the job description without lying
 
 ===== APPLICANT DETAILS =====
-Profile: ${JSON.stringify(userProfile)}
+Name: ${userProfile.name}
+Email: ${userProfile.email}
+Phone: ${userProfile.phone}
+LinkedIn: ${userProfile.linkedin}
+GitHub: ${userProfile.github}
+Degree: ${userProfile.education.degree}
+University: ${userProfile.education.institution}
+Graduation Year: ${userProfile.education.year}
+Work Experience: ${userProfile.experience.map(exp => `${exp.title} at ${exp.company} (${exp.duration}): ${exp.responsibilities.join('; ')}`).join(' | ')}
 
-===== JOB DESCRIPTION =====
+===== JOB DESCRIPTION (use only for tailoring - DO NOT COPY) =====
 ${jobDescription}
 
 STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
-OUTPUT RULES:
-1. Your FIRST line must be: <!DOCTYPE html>
-2. ONLY output the HTML resume.
-3. The name "${userProfile.name}" must be the first visible text.
+===== INSTRUCTIONS FOR SECTIONS =====
 
-SPECIFIC SECTION INSTRUCTIONS:
-- PROJECTS: Select 2 projects from the profile. Rewrite them to show intermediate-level impact (optimization/results) specifically tailored to the tools and requirements mentioned in the Job Description.
-- CERTIFICATIONS: Pick MAX 2-3 certifications from the achievements list in the profile that are most relevant to this JD and suitable for a fresher.
-- ACHIEVEMENTS: For each selected certification/award, write 1-2 lines explaining the specific project completed or skill learned to earn it, showing practical application.
+Projects:
+- Create 2–3 strong fresher-level projects
+- Tailor project descriptions, technologies and impact to match skills/tools mentioned in the job description
+- Make them sound realistic for a recent graduate
 
-Use this exact structure:
+Certifications:
+- Select and list only 2–3 most relevant certifications (realistic for a fresher)
+- Choose/prioritize ones that relate to the job description
+- If no direct match, choose generally valuable ones (e.g. AWS Cloud Practitioner, Google Data Analytics, HackerRank, etc.)
+
+Achievements:
+- List 3–4 bullet points
+- Connect them to learning, projects or certifications
+- Make some relevance to the job description when possible
+- Example style: "Achieved 4-star rating in CodeChef contest → strengthened problem-solving skills used in XYZ project"
+
+Use this exact HTML structure (replace bracketed parts):
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -76,7 +103,9 @@ li { margin: 2px 0; }
 </style>
 </head>
 <body>
+
 <h1>${userProfile.name}</h1>
+
 <div class="contact">
 <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
 <a href="${userProfile.linkedin}">LinkedIn</a> | 
@@ -84,10 +113,10 @@ li { margin: 2px 0; }
 </div>
 
 <h2>Professional Summary</h2>
-<div class="section"><p>[Write tailored summary focusing on fast learning and growth]</p></div>
+<div class="section"><p>[Write 2-3 strong sentences based on ${strategy} strategy]</p></div>
 
 <h2>Technical Skills</h2>
-<div class="section skills">[Add skill badges relevant to the JD]</div>
+<div class="section skills">[Skill badges – relevant ones first]</div>
 
 <h2>Education</h2>
 <div class="section"><p><strong>${userProfile.education.degree}</strong><br>${userProfile.education.institution}<br>Graduation: ${userProfile.education.year}</p></div>
@@ -96,19 +125,21 @@ li { margin: 2px 0; }
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
 <h2>Projects</h2>
-<div class="section">[AI: Insert 2 tailored projects here]</div>
+<div class="section">[2–3 tailored projects]</div>
 
 <h2>Certifications</h2>
-<div class="section"><ul>[AI: List 2-3 JD-relevant certifications here]</ul></div>
+<div class="section"><ul>[2–3 relevant certifications as bullets]</ul></div>
 
-<h2>Key Achievements & Learning Outcomes</h2>
-<div class="section"><ul>[AI: List tailored achievements connecting certificates to learning here]</ul></div>
+<h2>Achievements</h2>
+<div class="section"><ul>[3–4 achievements with learning/project connection]</ul></div>
+
 </body>
 </html>`;
 
     const result = await model.generateContent(prompt);
     let responseText = result.response.text();
-    
+
+    // 6. Clean Markdown and Extract HTML
     responseText = responseText.replace(/```html|```/g, '');
     const htmlStart = responseText.indexOf('<!DOCTYPE html>');
     if (htmlStart > -1) {
