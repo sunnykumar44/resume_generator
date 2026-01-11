@@ -80,7 +80,6 @@ ul { margin-left: 18px; }
 </style>
 </head>
 <body>
-
 <h1>${userProfile.name}</h1>
 <div class="contact">
   <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
@@ -96,14 +95,11 @@ ul { margin-left: 18px; }
 
 <h2>Education</h2>
 <div class="section">
-  <p><strong>${userProfile.education.degree}</strong></p>
-  
-  <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 11px;">
-    <span>${userProfile.education.institution}, Hyderabad</span>
-    <span style="font-weight: bold;">${userProfile.education.year}</span>
-  </div>
+  <p>
+    <strong>${userProfile.education.institution}</strong>, ${userProfile.education.location || ''} ${userProfile.education.year}
+    <br>${userProfile.education.degree}
+  </p>
 </div>
-
 <h2>Work Experience</h2>
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
