@@ -12,7 +12,6 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  // 2. Extract Data
   const jobDescription = req.body?.jobDescription || req.body?.data?.jobDescription;
   const strategy = req.body?.strategy || "ats";
 
@@ -23,22 +22,20 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     
-    // NOTE: If you still get a 404 error, change "gemini-3-flash" to "gemini-1.5-flash"
+    // NOTE: Official API ID is "gemini-1.5-flash" to access the Flash engine.
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
-    // 4. Strategy Map
     const strategyMap = {
       ats: "Focus on machine-readable keywords and clean formatting.",
       faang: "Focus on scale, impact, and high-level quantitative metrics.",
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
-    // 5. Prompt with your requested dynamic logic
-    const prompt = `CRITICAL INSTRUCTION: You are creating a resume for a job applicant. The job description below is ONLY for reference - DO NOT COPY IT. Create ONLY the applicant's resume.
+    const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer. Use the applicant details to create a tailored resume.
 
 ===== APPLICANT DETAILS =====
 Name: ${userProfile.name}
@@ -46,75 +43,54 @@ Email: ${userProfile.email}
 Phone: ${userProfile.phone}
 LinkedIn: ${userProfile.linkedin}
 GitHub: ${userProfile.github}
-Degree: ${userProfile.education.degree}
-University: ${userProfile.education.institution}
-Graduation Year: ${userProfile.education.year}
-Work Experience: ${userProfile.experience.map(exp => `${exp.title} at ${exp.company} (${exp.duration}): ${exp.responsibilities.join('; ')}`).join(' | ')}
-Achievements List: ${userProfile.achievements?.join(', ') || ''}
+Education: ${userProfile.education.degree} from ${userProfile.education.institution} (${userProfile.education.year})
+Work Experience: ${userProfile.experience.map(exp => `${exp.title} at ${exp.company}`).join(', ')}
+All Achievements/Certs: ${userProfile.achievements?.join(', ') || ''}
 
 ===== JOB DESCRIPTION =====
 ${jobDescription}
 
 STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
+DYNAMIC CONTENT RULES:
+- PROJECTS: Select 2 projects from the profile. CHANGE the descriptions to be relevant to the Job Description provided.
+- CERTIFICATIONS: List MAX 2-3 certifications only. They must be related to freshers and relevant to the Job Description.
+- ACHIEVEMENTS: Include 3-4 achievements. For those related to certifications, add a 1-2 line description about what was learned through the specific project/certification.
+
 OUTPUT RULES:
-1. Your FIRST line must be: <!DOCTYPE html>
+1. FIRST line must be: <!DOCTYPE html>
 2. ONLY output the HTML resume.
-3. The name "${userProfile.name}" must be the first visible text.
+3. Use a clean, professional CSS style within <style> tags.
 
-DYNAMIC LOGIC:
-- PROJECTS: Select 2 projects from the profile and rewrite their descriptions to be relevant to the Job Description.
-- CERTIFICATIONS: List max 2-3 JD-relevant certifications only, suitable for a fresher.
-- ACHIEVEMENTS: Include 3-4 items. For certificates, add 1-2 lines on the project/learning outcome.
-
-Use this exact structure:
+Use this structure:
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 210mm; margin: 0 auto; padding: 10mm; }
-h1 { font-size: 36px; font-weight: 700; margin-bottom: 8px; text-align: center; color: #2c3e50; }
+h1 { font-size: 32px; text-align: center; color: #2c3e50; }
 .contact { text-align: center; font-size: 11px; margin-bottom: 15px; }
-.contact a { color: #3498db; text-decoration: none; margin: 0 8px; }
-h2 { font-size: 16px; color: #2c3e50; border-bottom: 2px solid #3498db; margin: 15px 0 8px 0; padding-bottom: 3px; }
-.section { margin-bottom: 12px; }
-.section p, .section li { font-size: 11px; margin: 3px 0; }
+h2 { font-size: 16px; color: #2c3e50; border-bottom: 2px solid #3498db; margin: 15px 0 8px 0; }
+.section { margin-bottom: 12px; font-size: 11px; }
 ul { margin-left: 20px; }
-li { margin: 2px 0; }
-.skills { display: flex; flex-wrap: wrap; gap: 8px; }
-.skill { background: #ecf0f1; padding: 4px 10px; border-radius: 3px; font-size: 10px; }
 </style>
 </head>
 <body>
 <h1>${userProfile.name}</h1>
-<div class="contact">
-<a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
-<a href="${userProfile.linkedin}">LinkedIn</a> | 
-<a href="${userProfile.github}">GitHub</a>
-</div>
-
+<div class="contact">${userProfile.email} | ${userProfile.phone} | LinkedIn | GitHub</div>
 <h2>Professional Summary</h2>
-<div class="section"><p>[Write tailored summary]</p></div>
-
-<h2>Technical Skills</h2>
-<div class="section skills">[Add skill badges relevant to job]</div>
-
-<h2>Education</h2>
-<div class="section"><p><strong>${userProfile.education.degree}</strong><br>${userProfile.education.institution}<br>Graduation: ${userProfile.education.year}</p></div>
-
+<div class="section">[Summary based on strategy]</div>
 <h2>Work Experience</h2>
-<div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
-
+<div class="section">[Relevant experience detail]</div>
 <h2>Projects</h2>
-<div class="section">[AI: Insert 2 tailored projects here]</div>
-
+<div class="section">[2 projects tailored to JD]</div>
 <h2>Certifications</h2>
-<div class="section"><ul>[AI: Insert 2-3 relevant certifications]</ul></div>
-
+<div class="section"><ul>[2-3 relevant certs]</ul></div>
 <h2>Achievements</h2>
-<div class="section"><ul>[AI: Insert achievements with learning lines]</ul></div>
+<div class="section"><ul>[3-4 achievements with learning descriptions]</ul></div>
+<h2>Education</h2>
+<div class="section">${userProfile.education.degree} - ${userProfile.education.institution}</div>
 </body>
 </html>`;
 
