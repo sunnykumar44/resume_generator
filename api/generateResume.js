@@ -12,8 +12,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
+  // UPDATED: Extract pin along with other data
   const { jobDescription, strategy = "ats", pin } = req.body?.data || req.body;
 
+  // SECURITY CHECK: Match the incoming PIN with your secret Vercel variable
   if (!pin || pin !== process.env.APP_PIN) {
     return res.status(401).json({ error: "Unauthorized: Invalid PIN." });
   }
@@ -24,9 +26,9 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Updated to a standard stable model name if needed, or keep your preview version
 
-    // Load Profile
+    // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
@@ -50,8 +52,8 @@ DYNAMIC CONTENT RULES:
 - PROJECTS: Select 2 relevant projects. Rewrite descriptions to match JD keywords.
 - CERTIFICATIONS: List MAX 2-3 relevant to freshers and the JD.
 - ACHIEVEMENTS: 3-4 items. For certs, add 1-2 lines on the project/skill learned.
-- QUANTITATIVE IMPACT: Rewrite bullet points to include realistic estimated metrics.
-- CHARACTER TRAITS: Select EXACTLY 4 professional character traits.
+- QUANTITATIVE IMPACT: Rewrite bullet points to include realistic estimated metrics (e.g., "Increased efficiency by 15%", "Reduced load time by 200ms", "Handled 500+ data points").
+- CHARACTER TRAITS: Select EXACTLY 4 professional character traits related to the JD.
 
 OUTPUT RULES:
 1. Your FIRST line must be: <!DOCTYPE html>
@@ -64,11 +66,9 @@ OUTPUT RULES:
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Helvetica', Arial, sans-serif; line-height: 1.5; color: #333; max-width: 210mm; margin: 0 auto; padding: 10mm; }
-
-/* CSS RULE 1: Center Text */
-h1 { width: 100%; text-align: center; font-size: 32px; font-weight: 700; margin-bottom: 5px; color: #1a365d; text-transform: uppercase; }
-
-.contact { text-align: center; font-size: 10px; margin-bottom: 15px; color: #666; width: 100%; }
+/* UPDATED: Added width: 100% to ensure centering works perfectly */
+h1 { width: 100%; font-size: 32px; font-weight: 700; margin-bottom: 5px; text-align: center; color: #1a365d; text-transform: uppercase; }
+.contact { text-align: center; font-size: 10px; margin-bottom: 15px; color: #666; }
 .contact a { color: #2b6cb0; text-decoration: none; margin: 0 5px; }
 h2 { font-size: 14px; color: #1a365d; border-bottom: 1.5px solid #2b6cb0; margin: 15px 0 8px 0; text-transform: uppercase; letter-spacing: 1px; }
 .section { margin-bottom: 10px; }
@@ -81,10 +81,8 @@ ul { margin-left: 18px; }
 </style>
 </head>
 <body>
-
-<h1 style="text-align: center; display: block; width: 100%;">Sunny Kumar</h1>
-
-<div class="contact" style="text-align: center; display: block; width: 100%;">
+<h1>Sunny Kumar</h1>
+<div class="contact">
   <a href="mailto:${userProfile.email}">${userProfile.email}</a> | ${userProfile.phone} | 
   <a href="${userProfile.linkedin}">LinkedIn</a> | 
   <a href="${userProfile.github}">GitHub</a>
@@ -127,7 +125,6 @@ ul { margin-left: 18px; }
     const result = await model.generateContent(prompt);
     let responseText = result.response.text();
     
-    // Cleanup Markdown
     responseText = responseText.replace(/```html|```/g, '');
     const htmlStart = responseText.indexOf('<!DOCTYPE html>');
     if (htmlStart > -1) {
