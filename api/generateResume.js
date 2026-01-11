@@ -21,11 +21,8 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    
-    // FIXED: Use the exact ID from your listModels results
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
-    // 3. Load Sunny's Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
@@ -35,7 +32,6 @@ export default async function handler(req, res) {
       startup: "Focus on versatility, building from 0 to 1, and speed."
     };
 
-    // 5. Prompt Logic - Updated for Dynamic Projects, Certs, and Achievements
     const prompt = `CRITICAL INSTRUCTION: You are a professional resume writer. Create a high-impact resume for a FRESHER.
 
 ===== APPLICANT DATA =====
@@ -47,14 +43,14 @@ ${jobDescription}
 STRATEGY: ${strategyMap[strategy] || strategyMap.ats}
 
 DYNAMIC CONTENT RULES:
-- PROJECTS: Select 2 projects from the profile. Rewrite the descriptions to align with the keywords and role requirements in the Job Description.
-- CERTIFICATIONS: List MAX 2-3 certifications relevant to freshers and this specific role.
-- ACHIEVEMENTS: Include 3-4 achievements. For certifications, add 1-2 lines explaining the specific project or skill learned to earn it.
+- PROJECTS: Select 2 relevant projects. Rewrite descriptions to match JD keywords.
+- CERTIFICATIONS: List MAX 2-3 relevant to freshers and the JD.
+- ACHIEVEMENTS: 3-4 items. For certs, add 1-2 lines on the project/skill learned.
+- CHARACTER TRAITS: Select EXACTLY 4 professional character traits (e.g., "Problem Solver", "Quick Learner") that specifically match this job description.
 
 OUTPUT RULES:
 1. Your FIRST line must be: <!DOCTYPE html>
 2. ONLY output the HTML resume.
-3. The name "${userProfile.name}" must be the first visible text.
 
 <!DOCTYPE html>
 <html>
@@ -73,6 +69,9 @@ ul { margin-left: 20px; }
 li { margin: 2px 0; }
 .skills { display: flex; flex-wrap: wrap; gap: 8px; }
 .skill { background: #ecf0f1; padding: 4px 10px; border-radius: 3px; font-size: 10px; }
+/* Horizontal Traits Style */
+.traits-container { display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; }
+.trait { font-size: 12px; font-weight: bold; color: #3498db; text-transform: uppercase; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -84,10 +83,10 @@ li { margin: 2px 0; }
 </div>
 
 <h2>Professional Summary</h2>
-<div class="section"><p>[Write tailored summary based on JD]</p></div>
+<div class="section"><p>[Tailored summary]</p></div>
 
 <h2>Technical Skills</h2>
-<div class="section skills">[AI: Add skill badges relevant to job]</div>
+<div class="section skills">[Skill badges]</div>
 
 <h2>Education</h2>
 <div class="section"><p><strong>${userProfile.education.degree}</strong><br>${userProfile.education.institution}<br>Graduation: ${userProfile.education.year}</p></div>
@@ -96,13 +95,20 @@ li { margin: 2px 0; }
 <div class="section">${userProfile.experience.map(exp => `<p><strong>${exp.title}</strong><br>${exp.company} | ${exp.duration}<ul>${exp.responsibilities.map(r => `<li>${r}</li>`).join('')}</ul></p>`).join('')}</div>
 
 <h2>Projects</h2>
-<div class="section">[AI: Insert 2 projects tailored to JD]</div>
+<div class="section">[AI: 2 tailored projects]</div>
 
 <h2>Certifications</h2>
-<div class="section"><ul>[AI: List 2-3 JD-relevant certifications]</ul></div>
+<div class="section"><ul>[AI: 2-3 JD-relevant certifications]</ul></div>
 
 <h2>Achievements</h2>
-<div class="section"><ul>[AI: List achievements with 1-2 lines on learning outcome]</ul></div>
+<div class="section"><ul>[AI: List achievements with learning lines]</ul></div>
+
+<div class="traits-container">
+  <div class="trait">[Trait 1]</div>
+  <div class="trait">[Trait 2]</div>
+  <div class="trait">[Trait 3]</div>
+  <div class="trait">[Trait 4]</div>
+</div>
 </body>
 </html>`;
 
