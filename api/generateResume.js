@@ -95,10 +95,12 @@ ul { margin-left: 18px; }
 
 <h2>Education</h2>
 <div class="section">
-  <p>
-    <strong>${userProfile.education.institution}</strong>, ${userProfile.education.location || ''} ${userProfile.education.year}
-    <br>${userProfile.education.degree}
-  </p>
+  <p><strong>${userProfile.education.degree}</strong></p>
+  
+  <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 11px;">
+    <span>${userProfile.education.institution}, Hyderabad</span>
+    <span style="font-weight: bold;">${userProfile.education.year}</span>
+  </div>
 </div>
 
 <h2>Work Experience</h2>
