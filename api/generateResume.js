@@ -30,7 +30,6 @@ export default async function handler(req, res) {
       startup: "Emphasize versatility, speed, and ownership."
     };
 
-    // Corrected template literal structure
     const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. No markdown. No conversational text.
 
 ===== PROFILE =====
@@ -113,11 +112,18 @@ STRATEGY: ${strategyMap[strategy]}
     `).join("")}
   </div>
 
-  <h2>Key Projects</h2>
+  <h2>Projects</h2>
   <div class="section">[AI: 2 Projects]</div>
 
   <h2>Certifications</h2>
   <div class="section">[AI: Relevant Certs]</div>
+
+  <h2>Achievements</h2>
+  <div class="section">
+    <ul>
+      [AI: Generate 3-4 impactful achievements based on profile and JD]
+    </ul>
+  </div>
 
   <div style="display:flex; justify-content:space-between; margin-top:25px; border-top:1px solid #eee; padding-top:12px;">
     <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
