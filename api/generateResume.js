@@ -104,13 +104,17 @@ STRATEGY: ${strategyMap[strategy]}
     </div>
   </div>
 
-  <h2>Work Experience</h2>
-  <div class="section">
-    ${userProfile.experience.map(e => `
-      <p><strong>${e.title}</strong><br/>${e.company} | ${e.duration}</p>
-      <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
-    `).join("")}
-  </div>
+ <h2>Work Experience</h2>
+<div class="section">
+  ${userProfile.experience.map(e => `
+    <div style="display: flex; justify-content: space-between; align-items: baseline; width: 100%;">
+      <strong>${e.title}</strong>
+      <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
+    </div>
+    <p style="margin-bottom: 5px;">${e.company}</p>
+    <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
+  `).join("")}
+</div>
 
   <h2>Projects</h2>
   <div class="section">[AI: 2 Projects]</div>
