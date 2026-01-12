@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 
 export default async function handler(req, res) {
+  // 1. Set Security & CORS Headers
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
@@ -13,14 +14,20 @@ export default async function handler(req, res) {
 
   const { jobDescription, strategy = "ats", pin } = req.body?.data || req.body;
 
+  // 2. Security PIN Check
   if (!pin || pin !== process.env.APP_PIN) {
     return res.status(401).json({ error: "Unauthorized: Invalid PIN" });
   }
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    /** * FIX: Use 'gemini-2.5-pro' for the highest reasoning in 2026.
+     * This resolves the 404 error from older 1.5 versions.
+     */
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
+    // 3. Load User Profile
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
@@ -30,7 +37,14 @@ export default async function handler(req, res) {
       startup: "Emphasize versatility, speed, and ownership."
     };
 
-    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Keep content strictly to ONE PAGE but fill it vertically.
+    // 4. Detailed AI Prompt
+    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. 
+    STRICT RULES:
+    1. Keep Work Experience to EXACTLY 3 bullet points per role.
+    2. Keep Key Achievements to EXACTLY 3 bullet points total.
+    3. Include user certifications AND suggest ONE extra high-value certification relevant to the Job Description.
+    4. Provide 6 distinct professional characteristic traits for the footer.
+    5. Keep content strictly to ONE PAGE but fill it vertically by moving the name to the very top.
 
 ===== PROFILE =====
 ${JSON.stringify(userProfile)}
@@ -48,45 +62,27 @@ STRATEGY: ${strategyMap[strategy]}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { 
     font-family: 'Helvetica', 'Arial', sans-serif; 
-    line-height: 1.48; 
+    line-height: 1.45; 
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 8mm 12mm;
+    padding: 5mm 12mm; /* Pulls name to top */
   }
-  
-  .split-row { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: baseline; 
-    width: 100%; 
-  }
-
-  h2 { 
-    font-size: 13px; 
-    margin: 16px 0 8px; 
-    border-bottom: 1.5px solid #2b6cb0; 
-    color: #1a365d; 
-    text-transform: uppercase; 
-    letter-spacing: 1px; 
-  }
-  .section { margin-bottom: 12px; font-size: 10.5px; }
-  ul { margin-left: 18px; margin-top: 4px; }
-  li { margin-bottom: 4px; }
-  p { margin-bottom: 4px; }
-
-  .cert-item { margin-bottom: 8px; }
+  .split-row { display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
+  h2 { font-size: 13px; margin: 14px 0 6px; border-bottom: 1.5px solid #2b6cb0; color: #1a365d; text-transform: uppercase; letter-spacing: 1px; }
+  .section { margin-bottom: 10px; font-size: 10.5px; }
+  ul { margin-left: 18px; margin-top: 2px; }
+  li { margin-bottom: 3px; }
+  p { margin-bottom: 2px; }
+  .cert-item { margin-bottom: 6px; }
   .cert-name { font-weight: bold; color: #1e293b; font-size: 10.5px; }
   .cert-desc { font-size: 9.5px; color: #64748b; font-style: italic; display: block; }
 </style>
 </head>
 <body>
-
-  <div style="width: 100%; text-align: center !important; margin-bottom: 18px;">
-    <h1 style="font-size: 32px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 2px;">
-      ${userProfile.name}
-    </h1>
-    <div style="font-size: 11px; color: #4a5568;">
+  <div style="width: 100%; text-align: center !important; margin-bottom: 15px;">
+    <h1 style="font-size: 30px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 0px;">${userProfile.name}</h1>
+    <div style="font-size: 11px; color: #4a5568; margin-top: 4px;">
       <a href="mailto:${userProfile.email}" style="color: #2b6cb0; text-decoration: none;">${userProfile.email}</a> | 
       ${userProfile.phone} | 
       <a href="${userProfile.linkedin}" style="color: #2b6cb0; text-decoration: none;">LinkedIn</a> | 
@@ -94,60 +90,48 @@ STRATEGY: ${strategyMap[strategy]}
     </div>
   </div>
 
-  <h2>Professional Summary</h2>
-  <div class="section"><p>[AI: Tailored 4-sentence impact summary]</p></div>
+  <h2>Summary</h2>
+  <div class="section"><p>[AI: Tailored 3-sentence summary]</p></div>
 
   <h2>Technical Skills</h2>
-  <div class="section">[AI: Comprehensive JD-matched skill categories]</div>
+  <div class="section">[AI: Comprehensive categories]</div>
 
   <h2>Education</h2>
   <div class="section">
-    <div class="split-row">
-      <strong>${userProfile.education.degree}</strong>
-      <span style="font-weight:bold;">${userProfile.education.year}</span>
-    </div>
-    <p>${userProfile.education.institution}, Hyderabad</p>
+    <div class="split-row"><strong>${userProfile.education.degree}</strong><span style="font-weight:bold;">${userProfile.education.year}</span></div>
+    <p>${userProfile.education.institution}</p>
   </div>
 
   <h2>Work Experience</h2>
   <div class="section">
     ${userProfile.experience.map(e => `
-      <div class="split-row">
-        <strong>${e.title}</strong>
-        <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
-      </div>
+      <div class="split-row"><strong>${e.title}</strong><span style="font-weight: bold; font-size: 10px;">${e.duration}</span></div>
       <p><em>${e.company}</em></p>
       <ul>${e.responsibilities.slice(0, 3).map(r => `<li>${r}</li>`).join("")}</ul>
     `).join("")}
   </div>
 
   <h2>Selected Projects</h2>
-  <div class="section">
-    [AI: Select 2 projects. For each project, provide a title and 3-4 detailed, metric-heavy bullet points to show deep technical impact.]
-  </div>
+  <div class="section">[AI: 2 projects. Max 3 bullets each.]</div>
 
-  <h2>Certifications & Professional Expertise</h2>
-  <div class="section">
-    [AI: For each certification in profile, create a "cert-item". Include "cert-name" and add an extra line of "cert-desc" explaining a specific technical project or lab completed for that certification.]
-  </div>
+  <h2>Certifications</h2>
+  <div class="section">[AI: List user certs + 1 suggested cert.]</div>
 
   <h2>Key Achievements</h2>
-  <div class="section">
-    <ul>
-      [AI: Generate 3-4 impact-driven achievements, adding one more than before. Focus on quantitative results.]
-    </ul>
-  </div>
+  <div class="section"><ul>[AI: EXACTLY 3 impact-driven points.]</ul></div>
 
-  <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #cbd5e1; padding-top:12px;">
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
+  <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #cbd5e1; padding-top:10px;">
+    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
+    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
+    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
+    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
+    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 5]</div>
+    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 6]</div>
   </div>
-
 </body>
 </html>`;
 
+    // 5. Generate and Process
     const result = await model.generateContent(prompt);
     let html = result.response.text();
     html = html.replace(/```html|```/g, "");
