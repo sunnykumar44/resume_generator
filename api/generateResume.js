@@ -30,7 +30,11 @@ export default async function handler(req, res) {
       startup: "Emphasize versatility, speed, and ownership."
     };
 
-    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Keep content strictly to ONE PAGE.
+    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. 
+    STRICT RULES:
+    1. Keep Work Experience to exactly 3 bullet points per role.
+    2. Keep Key Achievements to exactly 3 bullet points total.
+    3. Keep content strictly to ONE PAGE.
 
 ===== PROFILE =====
 ${JSON.stringify(userProfile)}
@@ -48,11 +52,11 @@ STRATEGY: ${strategyMap[strategy]}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { 
     font-family: 'Helvetica', 'Arial', sans-serif; 
-    line-height: 1.48; 
+    line-height: 1.4; 
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 8mm 12mm;
+    padding: 5mm 12mm; /* Tight top padding to move name up */
   }
   
   .split-row { 
@@ -64,26 +68,25 @@ STRATEGY: ${strategyMap[strategy]}
 
   h2 { 
     font-size: 13px; 
-    margin: 16px 0 8px; 
+    margin: 12px 0 5px; 
     border-bottom: 1.5px solid #2b6cb0; 
     color: #1a365d; 
     text-transform: uppercase; 
     letter-spacing: 1px; 
   }
-  .section { margin-bottom: 12px; font-size: 10.5px; }
-  ul { margin-left: 18px; margin-top: 4px; }
-  li { margin-bottom: 4px; }
-  p { margin-bottom: 4px; }
+  .section { margin-bottom: 8px; font-size: 10.5px; }
+  ul { margin-left: 18px; margin-top: 2px; }
+  li { margin-bottom: 2px; }
+  p { margin-bottom: 2px; }
 
-  .cert-item { margin-bottom: 8px; }
+  .cert-item { margin-bottom: 4px; }
   .cert-name { font-weight: bold; color: #1e293b; font-size: 10.5px; }
-  .cert-desc { font-size: 9.5px; color: #64748b; font-style: italic; display: block; }
 </style>
 </head>
 <body>
 
-  <div style="width: 100%; text-align: center !important; margin-bottom: 18px;">
-    <h1 style="font-size: 32px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 2px;">
+  <div style="width: 100%; text-align: center !important; margin-bottom: 12px;">
+    <h1 style="font-size: 30px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 0px;">
       ${userProfile.name}
     </h1>
     <div style="font-size: 11px; color: #4a5568;">
@@ -94,10 +97,10 @@ STRATEGY: ${strategyMap[strategy]}
     </div>
   </div>
 
-  <h2>Professional Summary</h2>
-  <div class="section"><p>[AI: Tailored 4-sentence summary]</p></div>
+  <h2>Summary</h2>
+  <div class="section"><p>[AI: Concise 3-line summary]</p></div>
 
-  <h2>Technical Skills</h2>
+  <h2>Skills</h2>
   <div class="section">[AI: Comprehensive categories]</div>
 
   <h2>Education</h2>
@@ -106,7 +109,7 @@ STRATEGY: ${strategyMap[strategy]}
       <strong>${userProfile.education.degree}</strong>
       <span style="font-weight:bold;">${userProfile.education.year}</span>
     </div>
-    <p>${userProfile.education.institution}, Hyderabad</p>
+    <p>${userProfile.education.institution}</p>
   </div>
 
   <h2>Work Experience</h2>
@@ -117,30 +120,32 @@ STRATEGY: ${strategyMap[strategy]}
         <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
       </div>
       <p><em>${e.company}</em></p>
-      <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
+      <ul>${e.responsibilities.slice(0,3).map(r => `<li>${r}</li>`).join("")}</ul>
     `).join("")}
   </div>
 
-  <h2>Selected Projects</h2>
+  <h2>Projects</h2>
   <div class="section">
-    [AI: 2 projects. 2-3 detailed bullet points each.]
+    [AI: 2 projects. Max 3 bullets each.]
   </div>
 
-  <h2>Certifications & Expertise</h2>
+  <h2>Certifications</h2>
   <div class="section">
-    [AI: For each certification, create a "cert-item". Include "cert-name" and a short "cert-desc".]
+    [AI: List certifications concisely.]
   </div>
 
-  <h2>Key Achievements</h2>
+  <h2>Achievements</h2>
   <div class="section">
-    <ul>[AI: 3-4 impact-driven achievements.]</ul>
+    <ul>
+      [AI: Exactly 3 impactful bullet points.]
+    </ul>
   </div>
 
-  <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #cbd5e1; padding-top:12px;">
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
-    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
+  <div style="display:flex; justify-content:space-between; margin-top:15px; border-top:1px solid #cbd5e1; padding-top:8px;">
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
   </div>
 
 </body>
