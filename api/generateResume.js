@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       startup: "Emphasize versatility, speed, and ownership."
     };
 
-    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Fill the page vertically by expanding on details. NO markdown. 
+    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Fill the page vertically. No markdown.
 
 ===== PROFILE =====
 ${JSON.stringify(userProfile)}
@@ -48,7 +48,7 @@ STRATEGY: ${strategyMap[strategy]}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { 
     font-family: 'Helvetica', 'Arial', sans-serif; 
-    line-height: 1.5; 
+    line-height: 1.6; 
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
@@ -64,25 +64,29 @@ STRATEGY: ${strategyMap[strategy]}
 
   h2 { 
     font-size: 13px; 
-    margin: 18px 0 8px; 
+    margin: 20px 0 10px; 
     border-bottom: 1.5px solid #2b6cb0; 
     color: #1a365d; 
     text-transform: uppercase; 
     letter-spacing: 1px; 
   }
-  .section { margin-bottom: 12px; font-size: 10.5px; }
-  ul { margin-left: 18px; margin-top: 4px; }
-  li { margin-bottom: 4px; }
-  p { margin-bottom: 4px; }
+  .section { margin-bottom: 15px; font-size: 10.5px; }
+  ul { margin-left: 18px; margin-top: 5px; }
+  li { margin-bottom: 5px; }
+  p { margin-bottom: 5px; }
+
+  .cert-item { margin-bottom: 10px; }
+  .cert-name { font-weight: bold; color: #1e293b; }
+  .cert-desc { font-size: 9.5px; color: #64748b; font-style: italic; display: block; }
 </style>
 </head>
 <body>
 
-  <div style="width: 100%; text-align: center !important; margin-bottom: 25px;">
-    <h1 style="font-size: 34px; font-weight: 800; color: #1a365d; text-transform: uppercase; display: block; width: 100%; text-align: center;">
+  <div style="width: 100%; text-align: center !important; margin-bottom: 30px;">
+    <h1 style="font-size: 34px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 8px;">
       ${userProfile.name}
     </h1>
-    <div style="font-size: 11px; color: #4a5568; width: 100%; text-align: center; margin-top: 6px;">
+    <div style="font-size: 11px; color: #4a5568;">
       <a href="mailto:${userProfile.email}" style="color: #2b6cb0; text-decoration: none;">${userProfile.email}</a> | 
       ${userProfile.phone} | 
       <a href="${userProfile.linkedin}" style="color: #2b6cb0; text-decoration: none;">LinkedIn</a> | 
@@ -91,10 +95,10 @@ STRATEGY: ${strategyMap[strategy]}
   </div>
 
   <h2>Professional Summary</h2>
-  <div class="section"><p>[AI: Tailored 3-4 sentence high-impact summary]</p></div>
+  <div class="section"><p>[AI: Tailored 4-sentence high-impact summary]</p></div>
 
   <h2>Technical Skills</h2>
-  <div class="section">[AI: Comprehensive JD-matched skill categories]</div>
+  <div class="section">[AI: Comprehensive JD-matched categories]</div>
 
   <h2>Education</h2>
   <div class="section">
@@ -119,22 +123,26 @@ STRATEGY: ${strategyMap[strategy]}
 
   <h2>Selected Projects</h2>
   <div class="section">
-    [AI: Select 2 relevant projects. For each, provide a title and 3 detailed bullet points focusing on tech stack and quantitative results.]
+    [AI: Select 2 projects. For each, use a split-row for Title and Tech Stack, followed by 3 impact bullets.]
   </div>
 
-  <h2>Certifications & Learning</h2>
+  <h2>Certifications & Professional Expertise</h2>
   <div class="section">
-    [AI: For each certification in profile, add 1-2 lines explaining the specific technical skills mastered.]
+    [AI: For each certification, create a div with class "cert-item". 
+    Inside, put a span with class "cert-name" for the title, 
+    and a span with class "cert-desc" describing the specific advanced module or 
+    project completed within that certification to demonstrate mastery.]
   </div>
 
   <h2>Key Achievements</h2>
   <div class="section">
     <ul>
-      [AI: Generate 4 impactful achievements with metrics tailored to the JD.]
+      [AI: Generate 4 unique achievements. Focus on competitive rankings, 
+      open source contributions, or specific problem-solving scenarios from the profile.]
     </ul>
   </div>
 
-  <div style="display:flex; justify-content:space-between; margin-top:35px; border-top:1px solid #eee; padding-top:15px;">
+  <div style="display:flex; justify-content:space-between; margin-top:40px; border-top:1px solid #cbd5e1; padding-top:20px;">
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
@@ -146,12 +154,9 @@ STRATEGY: ${strategyMap[strategy]}
 
     const result = await model.generateContent(prompt);
     let html = result.response.text();
-    
     html = html.replace(/```html|```/g, "");
     const startIndex = html.indexOf("<!DOCTYPE html>");
-    if (startIndex !== -1) {
-      html = html.substring(startIndex);
-    }
+    if (startIndex !== -1) html = html.substring(startIndex);
 
     return res.status(200).json({ success: true, resume: html });
 
