@@ -19,8 +19,9 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // SWITCHED TO PRO MODEL HERE
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    // FIX: Using the more stable 'latest' string
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
 
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
@@ -101,7 +102,7 @@ STRATEGY: ${strategyMap[strategy]}
     </div>
   </div>
 
-  <h2>Professional Summary</h2>
+  <h2>Summary</h2>
   <div class="section"><p>[AI: Tailored summary]</p></div>
 
   <h2>Technical Skills</h2>
@@ -128,22 +129,14 @@ STRATEGY: ${strategyMap[strategy]}
     `).join("")}
   </div>
 
-  <h2>Selected Projects</h2>
-  <div class="section">
-    [AI: 2 projects. Max 3 bullets each.]
-  </div>
+  <h2>Projects</h2>
+  <div class="section">[AI: 2 projects. Max 3 bullets each.]</div>
 
   <h2>Certifications</h2>
-  <div class="section">
-    [AI: List user certs + 1 suggested cert.]
-  </div>
+  <div class="section">[AI: List user certs + 1 suggested cert.]</div>
 
-  <h2>Key Achievements</h2>
-  <div class="section">
-    <ul>
-      [AI: EXACTLY 3 high-impact points.]
-    </ul>
-  </div>
+  <h2>Achievements</h2>
+  <div class="section"><ul>[AI: EXACTLY 3 high-impact points.]</ul></div>
 
   <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #cbd5e1; padding-top:10px;">
     <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
