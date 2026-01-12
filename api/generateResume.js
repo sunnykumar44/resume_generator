@@ -34,8 +34,7 @@ export default async function handler(req, res) {
     STRICT RULES:
     1. Keep Work Experience to exactly 3 bullet points per role.
     2. Keep Key Achievements to exactly 3 bullet points total.
-    3. Include ONE extra relevant certification/course suggestion based on the JD.
-    4. Keep content strictly to ONE PAGE.
+    3. Keep content strictly to ONE PAGE.
 
 ===== PROFILE =====
 ${JSON.stringify(userProfile)}
@@ -57,7 +56,7 @@ STRATEGY: ${strategyMap[strategy]}
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 5mm 12mm; 
+    padding: 5mm 12mm; /* Tight top padding to move name up */
   }
   
   .split-row { 
@@ -132,7 +131,7 @@ STRATEGY: ${strategyMap[strategy]}
 
   <h2>Certifications</h2>
   <div class="section">
-    [AI: List user certifications AND add one extra JD-relevant certification/course.]
+    [AI: List certifications concisely.]
   </div>
 
   <h2>Achievements</h2>
@@ -143,12 +142,10 @@ STRATEGY: ${strategyMap[strategy]}
   </div>
 
   <div style="display:flex; justify-content:space-between; margin-top:15px; border-top:1px solid #cbd5e1; padding-top:8px;">
-    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
-    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
-    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
-    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
-    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 5]</div>
-    <div style="font-size:8.5px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 6]</div>
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
+    <div style="font-size:9px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
   </div>
 
 </body>
