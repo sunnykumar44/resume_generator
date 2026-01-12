@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       startup: "Emphasize versatility, speed, and ownership."
     };
 
-    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. No markdown. No conversational text.
+    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Fill the page vertically by expanding on details. NO markdown. 
 
 ===== PROFILE =====
 ${JSON.stringify(userProfile)}
@@ -48,14 +48,14 @@ STRATEGY: ${strategyMap[strategy]}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { 
     font-family: 'Helvetica', 'Arial', sans-serif; 
-    line-height: 1.4; 
-    color: #1a202c; 
+    line-height: 1.5; 
+    color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 10mm; 
+    padding: 12mm; 
   }
   
-  .edu-row { 
+  .split-row { 
     display: flex; 
     justify-content: space-between; 
     align-items: baseline; 
@@ -64,24 +64,25 @@ STRATEGY: ${strategyMap[strategy]}
 
   h2 { 
     font-size: 13px; 
-    margin: 15px 0 6px; 
+    margin: 18px 0 8px; 
     border-bottom: 1.5px solid #2b6cb0; 
     color: #1a365d; 
     text-transform: uppercase; 
     letter-spacing: 1px; 
   }
-  .section { margin-bottom: 8px; font-size: 10.5px; }
-  ul { margin-left: 18px; }
-  p { margin-bottom: 2px; }
+  .section { margin-bottom: 12px; font-size: 10.5px; }
+  ul { margin-left: 18px; margin-top: 4px; }
+  li { margin-bottom: 4px; }
+  p { margin-bottom: 4px; }
 </style>
 </head>
 <body>
 
-  <div style="width: 100%; text-align: center !important; margin-bottom: 20px;">
-    <h1 style="font-size: 32px; font-weight: 800; color: #1a365d; text-transform: uppercase; display: block; width: 100%; text-align: center;">
+  <div style="width: 100%; text-align: center !important; margin-bottom: 25px;">
+    <h1 style="font-size: 34px; font-weight: 800; color: #1a365d; text-transform: uppercase; display: block; width: 100%; text-align: center;">
       ${userProfile.name}
     </h1>
-    <div style="font-size: 11px; color: #4a5568; width: 100%; text-align: center; margin-top: 5px;">
+    <div style="font-size: 11px; color: #4a5568; width: 100%; text-align: center; margin-top: 6px;">
       <a href="mailto:${userProfile.email}" style="color: #2b6cb0; text-decoration: none;">${userProfile.email}</a> | 
       ${userProfile.phone} | 
       <a href="${userProfile.linkedin}" style="color: #2b6cb0; text-decoration: none;">LinkedIn</a> | 
@@ -90,50 +91,54 @@ STRATEGY: ${strategyMap[strategy]}
   </div>
 
   <h2>Professional Summary</h2>
-  <div class="section"><p>[AI: Tailored summary]</p></div>
+  <div class="section"><p>[AI: Tailored 3-4 sentence high-impact summary]</p></div>
 
   <h2>Technical Skills</h2>
-  <div class="section">[AI: Badges]</div>
+  <div class="section">[AI: Comprehensive JD-matched skill categories]</div>
 
   <h2>Education</h2>
   <div class="section">
-    <p><strong>${userProfile.education.degree}</strong></p>
-    <div class="edu-row">
-      <span>${userProfile.education.institution}, Hyderabad</span>
+    <div class="split-row">
+      <strong>${userProfile.education.degree}</strong>
       <span style="font-weight:bold;">${userProfile.education.year}</span>
     </div>
+    <p>${userProfile.education.institution}, Hyderabad</p>
   </div>
 
- <h2>Work Experience</h2>
-<div class="section">
-  ${userProfile.experience.map(e => `
-    <div style="display: flex; justify-content: space-between; align-items: baseline; width: 100%;">
-      <strong>${e.title}</strong>
-      <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
-    </div>
-    <p style="margin-bottom: 5px;">${e.company}</p>
-    <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
-  `).join("")}
-</div>
+  <h2>Work Experience</h2>
+  <div class="section">
+    ${userProfile.experience.map(e => `
+      <div class="split-row">
+        <strong>${e.title}</strong>
+        <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
+      </div>
+      <p><em>${e.company}</em></p>
+      <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
+    `).join("")}
+  </div>
 
-  <h2>Projects</h2>
-  <div class="section">[AI: 2 Projects]</div>
+  <h2>Selected Projects</h2>
+  <div class="section">
+    [AI: Select 2 relevant projects. For each, provide a title and 3 detailed bullet points focusing on tech stack and quantitative results.]
+  </div>
 
-  <h2>Certifications</h2>
-  <div class="section">[AI: Relevant Certs]</div>
+  <h2>Certifications & Learning</h2>
+  <div class="section">
+    [AI: For each certification in profile, add 1-2 lines explaining the specific technical skills mastered.]
+  </div>
 
-  <h2>Achievements</h2>
+  <h2>Key Achievements</h2>
   <div class="section">
     <ul>
-      [AI: Generate 3-4 impactful achievements based on profile and JD]
+      [AI: Generate 4 impactful achievements with metrics tailored to the JD.]
     </ul>
   </div>
 
-  <div style="display:flex; justify-content:space-between; margin-top:25px; border-top:1px solid #eee; padding-top:12px;">
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
-    <div style="font-size:10px; font-weight:700; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
+  <div style="display:flex; justify-content:space-between; margin-top:35px; border-top:1px solid #eee; padding-top:15px;">
+    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
+    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
+    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
+    <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 4]</div>
   </div>
 
 </body>
