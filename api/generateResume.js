@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
 
@@ -11,14 +11,16 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-  const { jobDescription, strategy = "ats", pin } = req.body?.data || req.body;
+  const { jobDescription, strategy = "ats", pin } = req.body;
 
   if (!pin || pin !== process.env.APP_PIN) {
     return res.status(401).json({ error: "Unauthorized: Invalid PIN" });
   }
 
   try {
-    const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
@@ -150,12 +152,15 @@ STRATEGY: ${strategyMap[strategy]}
 </body>
 </html>`;
 
-    const result = await genAI.models.generateContent({
-      model: "models/gemini-2.5-flash",
-      contents: [{ role: "user", parts: [{ text: prompt }] }]
-    });
+    const generationConfig = {
+      temperature: 0.7,
+      topK: 32,
+      topP: 1,
+      maxOutputTokens: 4096,
+    };
 
-    let html = result.candidates[0].content.parts[0].text;
+    const result = await model.generateContent(prompt, generationConfig);
+    let html = result.response.text();
     html = html.replace(/```html|```/g, "");
     const startIndex = html.indexOf("<!DOCTYPE html>");
     if (startIndex !== -1) html = html.substring(startIndex);
@@ -163,6 +168,7 @@ STRATEGY: ${strategyMap[strategy]}
     return res.status(200).json({ success: true, resume: html });
 
   } catch (err) {
+    console.error('Backend Error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
