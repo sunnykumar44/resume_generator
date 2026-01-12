@@ -117,7 +117,7 @@ STRATEGY: ${strategyMap[strategy]}
         <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
       </div>
       <p><em>${e.company}</em></p>
-      <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
+      <ul>${e.responsibilities.slice(0, 3).map(r => `<li>${r}</li>`).join("")}</ul>
     `).join("")}
   </div>
 
