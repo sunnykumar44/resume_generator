@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       startup: "Emphasize versatility, speed, and ownership."
     };
 
-    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Keep content strictly to ONE PAGE.
+    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Keep content strictly to ONE PAGE but fill it vertically.
 
 ===== PROFILE =====
 ${JSON.stringify(userProfile)}
@@ -48,11 +48,11 @@ STRATEGY: ${strategyMap[strategy]}
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { 
     font-family: 'Helvetica', 'Arial', sans-serif; 
-    line-height: 1.45; 
+    line-height: 1.48; 
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 6mm 12mm; /* Reduced top padding to move name up */
+    padding: 8mm 12mm;
   }
   
   .split-row { 
@@ -64,25 +64,25 @@ STRATEGY: ${strategyMap[strategy]}
 
   h2 { 
     font-size: 13px; 
-    margin: 14px 0 6px; /* Tightened margins for sections */
+    margin: 16px 0 8px; 
     border-bottom: 1.5px solid #2b6cb0; 
     color: #1a365d; 
     text-transform: uppercase; 
     letter-spacing: 1px; 
   }
-  .section { margin-bottom: 10px; font-size: 10.5px; }
-  ul { margin-left: 18px; margin-top: 3px; }
-  li { margin-bottom: 3px; }
-  p { margin-bottom: 3px; }
+  .section { margin-bottom: 12px; font-size: 10.5px; }
+  ul { margin-left: 18px; margin-top: 4px; }
+  li { margin-bottom: 4px; }
+  p { margin-bottom: 4px; }
 
-  .cert-item { margin-bottom: 6px; }
+  .cert-item { margin-bottom: 8px; }
   .cert-name { font-weight: bold; color: #1e293b; font-size: 10.5px; }
   .cert-desc { font-size: 9.5px; color: #64748b; font-style: italic; display: block; }
 </style>
 </head>
 <body>
 
-  <div style="width: 100%; text-align: center !important; margin-bottom: 15px;">
+  <div style="width: 100%; text-align: center !important; margin-bottom: 18px;">
     <h1 style="font-size: 32px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 2px;">
       ${userProfile.name}
     </h1>
@@ -95,10 +95,10 @@ STRATEGY: ${strategyMap[strategy]}
   </div>
 
   <h2>Professional Summary</h2>
-  <div class="section"><p>[AI: Concise 3-4 sentence summary]</p></div>
+  <div class="section"><p>[AI: Tailored 4-sentence impact summary]</p></div>
 
   <h2>Technical Skills</h2>
-  <div class="section">[AI: Targeted skill badges]</div>
+  <div class="section">[AI: Comprehensive JD-matched skill categories]</div>
 
   <h2>Education</h2>
   <div class="section">
@@ -123,22 +123,22 @@ STRATEGY: ${strategyMap[strategy]}
 
   <h2>Selected Projects</h2>
   <div class="section">
-    [AI: Select 2 projects. Use split-row for title/tech, then 2-3 impact bullets.]
+    [AI: Select 2 projects. For each project, provide a title and 3-4 detailed, metric-heavy bullet points to show deep technical impact.]
   </div>
 
-  <h2>Certifications & Expertise</h2>
+  <h2>Certifications & Professional Expertise</h2>
   <div class="section">
-    [AI: For each certification, create a "cert-item". Include "cert-name" and a short, one-line "cert-desc" to save space.]
+    [AI: For each certification in profile, create a "cert-item". Include "cert-name" and add an extra line of "cert-desc" explaining a specific technical project or lab completed for that certification.]
   </div>
 
   <h2>Key Achievements</h2>
   <div class="section">
     <ul>
-      [AI: 3-4 concise impact-driven achievements.]
+      [AI: Generate 4-5 impact-driven achievements, adding one more than before. Focus on quantitative results.]
     </ul>
   </div>
 
-  <div style="display:flex; justify-content:space-between; margin-top:25px; border-top:1px solid #cbd5e1; padding-top:10px;">
+  <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #cbd5e1; padding-top:12px;">
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
