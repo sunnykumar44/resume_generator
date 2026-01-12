@@ -126,7 +126,7 @@ STRATEGY: ${strategyMap[strategy]}
 
   <h2>Projects</h2>
   <div class="section">
-    [AI: Select 2 projects. For each project, provide a title and 2-3 detailed, metric-heavy bullet points to show deep technical impact.]
+    [AI: Select 2 projects. For each project, provide a title and 2 detailed, metric-heavy bullet points to show deep technical impact.]
   </div>
 
   <h2>Certifications</h2>
