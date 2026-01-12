@@ -134,7 +134,7 @@ STRATEGY: ${strategyMap[strategy]}
   <h2>Key Achievements</h2>
   <div class="section">
     <ul>
-      [AI: Generate 4-5 impact-driven achievements, adding one more than before. Focus on quantitative results.]
+      [AI: Generate 3-4 impact-driven achievements, adding one more than before. Focus on quantitative results.]
     </ul>
   </div>
 
