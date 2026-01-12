@@ -19,7 +19,8 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    // SWITCHED TO PRO MODEL HERE
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
@@ -58,7 +59,7 @@ STRATEGY: ${strategyMap[strategy]}
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 5mm 12mm; /* Reduced top padding to move name up */
+    padding: 5mm 12mm;
   }
   
   .split-row { 
@@ -101,7 +102,7 @@ STRATEGY: ${strategyMap[strategy]}
   </div>
 
   <h2>Professional Summary</h2>
-  <div class="section"><p>[AI: Tailored 3-4 sentence summary]</p></div>
+  <div class="section"><p>[AI: Tailored summary]</p></div>
 
   <h2>Technical Skills</h2>
   <div class="section">[AI: Comprehensive categories]</div>
@@ -112,7 +113,7 @@ STRATEGY: ${strategyMap[strategy]}
       <strong>${userProfile.education.degree}</strong>
       <span style="font-weight:bold;">${userProfile.education.year}</span>
     </div>
-    <p>${userProfile.education.institution}, Hyderabad</p>
+    <p>${userProfile.education.institution}</p>
   </div>
 
   <h2>Work Experience</h2>
@@ -132,15 +133,15 @@ STRATEGY: ${strategyMap[strategy]}
     [AI: 2 projects. Max 3 bullets each.]
   </div>
 
-  <h2>Certifications & Expertise</h2>
+  <h2>Certifications</h2>
   <div class="section">
-    [AI: List user certs + 1 suggested cert. Use .cert-item structure with a short .cert-desc.]
+    [AI: List user certs + 1 suggested cert.]
   </div>
 
   <h2>Key Achievements</h2>
   <div class="section">
     <ul>
-      [AI: EXACTLY 3 high-impact achievements with metrics.]
+      [AI: EXACTLY 3 high-impact points.]
     </ul>
   </div>
 
