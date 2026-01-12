@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       startup: "Emphasize versatility, speed, and ownership."
     };
 
-    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Keep content strictly to ONE PAGE.
+    const prompt = `CRITICAL INSTRUCTION: Output ONLY valid HTML starting with <!DOCTYPE html>. Keep content strictly to ONE PAGE but fill it vertically.
 
 ===== PROFILE =====
 ${JSON.stringify(userProfile)}
@@ -95,10 +95,10 @@ STRATEGY: ${strategyMap[strategy]}
   </div>
 
   <h2>Professional Summary</h2>
-  <div class="section"><p>[AI: Tailored 4-sentence summary]</p></div>
+  <div class="section"><p>[AI: Tailored 4-sentence impact summary]</p></div>
 
   <h2>Technical Skills</h2>
-  <div class="section">[AI: Comprehensive categories]</div>
+  <div class="section">[AI: Comprehensive JD-matched skill categories]</div>
 
   <h2>Education</h2>
   <div class="section">
@@ -123,17 +123,19 @@ STRATEGY: ${strategyMap[strategy]}
 
   <h2>Selected Projects</h2>
   <div class="section">
-    [AI: 2 projects. 2-3 detailed bullet points each.]
+    [AI: Select 2 projects. For each project, provide a title and 3-4 detailed, metric-heavy bullet points to show deep technical impact.]
   </div>
 
-  <h2>Certifications & Expertise</h2>
+  <h2>Certifications & Professional Expertise</h2>
   <div class="section">
-    [AI: For each certification, create a "cert-item". Include "cert-name" and a short "cert-desc".]
+    [AI: For each certification in profile, create a "cert-item". Include "cert-name" and add an extra line of "cert-desc" explaining a specific technical project or lab completed for that certification.]
   </div>
 
   <h2>Key Achievements</h2>
   <div class="section">
-    <ul>[AI: 3-4 impact-driven achievements.]</ul>
+    <ul>
+      [AI: Generate 4-5 impact-driven achievements, adding one more than before. Focus on quantitative results.]
+    </ul>
   </div>
 
   <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #cbd5e1; padding-top:12px;">
