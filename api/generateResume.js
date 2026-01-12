@@ -126,10 +126,10 @@ STRATEGY: ${strategyMap[strategy]}
 
   <h2>Projects</h2>
   <div class="section">
-    [AI: Select 2 projects. For each project, provide a title and 3-4 detailed, metric-heavy bullet points to show deep technical impact.]
+    [AI: Select 2 projects. For each project, provide a title and 2-3 detailed, metric-heavy bullet points to show deep technical impact.]
   </div>
 
-  <h2>Certifications & Professional Expertise</h2>
+  <h2>Certifications</h2>
   <div class="section">
     [AI: For each certification in profile, create a "cert-item". Include "cert-name" and add an extra line of "cert-desc" explaining a specific technical project or lab completed for that certification.]
   </div>
