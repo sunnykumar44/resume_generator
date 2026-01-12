@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import path from "path";
 
@@ -18,9 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-
+    const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1beta' });
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
@@ -94,7 +92,7 @@ STRATEGY: ${strategyMap[strategy]}
     </div>
   </div>
 
-  <h2>Professional Summary</h2>
+  <h2>Summary</h2>
   <div class="section"><p>[AI: Tailored 4-sentence impact summary]</p></div>
 
   <h2>Technical Skills</h2>
@@ -109,19 +107,21 @@ STRATEGY: ${strategyMap[strategy]}
     <p>${userProfile.education.institution}, Hyderabad</p>
   </div>
 
-  <h2>Work Experience</h2>
-  <div class="section">
-    ${userProfile.experience.map(e => `
-      <div class="split-row">
-        <strong>${e.title}</strong>
-        <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
-      </div>
-      <p><em>${e.company}</em></p>
-      <ul>${e.responsibilities.map(r => `<li>${r}</li>`).join("")}</ul>
-    `).join("")}
-  </div>
+ <h2>Work Experience</h2>
+<div class="section">
+  ${userProfile.experience.map(e => `
+    <div class="split-row">
+      <strong>${e.title}</strong>
+      <span style="font-weight: bold; font-size: 10px;">${e.duration}</span>
+    </div>
+    <p><em>${e.company}</em></p>
+    <ul>
+      ${e.responsibilities.slice(0, 3).map(r => `<li>${r}</li>`).join("")}
+    </ul>
+  `).join("")}
+</div>
 
-  <h2>Selected Projects</h2>
+  <h2>Projects</h2>
   <div class="section">
     [AI: Select 2 projects. For each project, provide a title and 3-4 detailed, metric-heavy bullet points to show deep technical impact.]
   </div>
@@ -131,10 +131,12 @@ STRATEGY: ${strategyMap[strategy]}
     [AI: For each certification in profile, create a "cert-item". Include "cert-name" and add an extra line of "cert-desc" explaining a specific technical project or lab completed for that certification.]
   </div>
 
-  <h2>Key Achievements</h2>
+ <h2>Achievements</h2>
   <div class="section">
     <ul>
-      [AI: Generate 3 impact-driven achievements, adding one more than before. Focus on quantitative results.]
+      [AI: Generate exactly 3 impact-driven achievements. 
+      Each must include a metric (%, $, or time). 
+      Example: "Reduced processing time by 20% through automated scripting."]
     </ul>
   </div>
 
@@ -148,8 +150,12 @@ STRATEGY: ${strategyMap[strategy]}
 </body>
 </html>`;
 
-    const result = await model.generateContent(prompt);
-    let html = result.response.text();
+    const result = await genAI.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }]
+    });
+
+    let html = result.text();
     html = html.replace(/```html|```/g, "");
     const startIndex = html.indexOf("<!DOCTYPE html>");
     if (startIndex !== -1) html = html.substring(startIndex);

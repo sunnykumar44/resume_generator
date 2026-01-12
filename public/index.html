@@ -100,14 +100,14 @@
     .history-item:hover { background: #f8fafc; }
 
     /* Resume Output (The A4 Look) */
-  #resume-output {
-    margin-top: 15px; /* Reduced gap */
-    padding: 20px 40px; /* Reduced top/bottom padding */
-    background: white;
-    border: 1px solid #e2e8f0;
-    min-height: 500px;
-    display: none;
-}
+    #resume-output {
+        margin-top: 15px; 
+        padding: 20px 40px; 
+        background: white;
+        border: 1px solid #e2e8f0;
+        min-height: 500px;
+        display: none;
+    }
 
     /* Loading */
     #loading { display: none; text-align: center; margin: 20px 0; }
@@ -124,38 +124,23 @@
 
     @media print {
         .no-print { display: none !important; }
-        body { background: white; }
+        body { background: white; margin: 1.6cm; }
         .app-grid { display: block; margin: 0; padding: 0; }
         #resume-output { display: block !important; border: none; padding: 0; }
+        @page { margin: 0; }
     }
-@media (max-width: 768px) {
-    .app-grid {
-        grid-template-columns: 1fr; /* Stack sidebar below the main card */
-        margin: 10px auto;
-    }
-}
 
-    @media print {
-    @page {
-        margin: 0; /* This removes default headers and footers */
+    @media (max-width: 768px) {
+        .app-grid { grid-template-columns: 1fr; margin: 10px auto; }
     }
-    body {
-        margin: 1.6cm; /* This adds margin back to your content so it isn't cut off */
+
+    #resume-output h1 {
+      display: block !important;
+      text-align: center !important;
+      width: 100% !important;
     }
-    .no-print { display: none !important; }
-    body { background: white; }
-    .app-grid { display: block; margin: 0; padding: 0; }
-    #resume-output { display: block !important; border: none; padding: 0; }
-}
-
-/* FORCE resume name centering */
-#resume-output h1 {
-  display: block !important;
-  text-align: center !important;
-  width: 100% !important;
-}
-
-</style></head>
+</style>
+</head>
 <body>
 
 <div class="app-grid">
@@ -191,22 +176,18 @@
         <div id="historyList"></div>
     </div>
 </div></div>
+
 <script>
     const API_URL = "/api/generateResume";
     const ADMIN_PIN = "8080"; 
-    let sessionPin = null; // This stores the PIN for the current session
+    let sessionPin = null;
 
-    // 1. GENERATE RESUME
     async function generate() {
-        // Only prompt if we don't already have the PIN for this session
         if (!sessionPin) {
             const userInput = prompt("Enter Admin PIN:");
             if (userInput === null) return; 
-
-            if (userInput.trim() !== ADMIN_PIN) { 
-                return alert("Unauthorized: Incorrect PIN");
-            }
-            sessionPin = userInput.trim(); // Save it for this session
+            if (userInput.trim() !== ADMIN_PIN) return alert("Unauthorized: Incorrect PIN");
+            sessionPin = userInput.trim();
         }
         
         const jd = document.getElementById('jobDescription').value;
@@ -221,6 +202,7 @@
         btn.disabled = true;
         loader.style.display = "block";
         output.style.display = "none";
+        dlBtn.style.display = "none";
 
         try {
             const res = await fetch(API_URL, {
@@ -229,12 +211,22 @@
                 body: JSON.stringify({ 
                     jobDescription: jd, 
                     strategy: strategy, 
-                    pin: sessionPin // Use the stored session PIN
+                    pin: sessionPin 
                 })
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+            // FIX: Read as text first to handle non-JSON error pages from Vercel
+            const rawResponse = await res.text();
+            
+            let data;
+            try {
+                data = JSON.parse(rawResponse);
+            } catch (parseError) {
+                console.error("Raw Server Error:", rawResponse);
+                throw new Error("Server sent invalid data. Check Vercel logs. Response started with: " + rawResponse.substring(0, 50));
+            }
+
+            if (!res.ok) throw new Error(data.error || "Generation failed");
 
             output.innerHTML = data.resume;
             output.style.display = "block";
@@ -250,15 +242,11 @@
         }
     }
 
-    // PROTECTED HISTORY ACCESS
     function loadHistory(index) {
         if (!sessionPin) {
             const userInput = prompt("Enter Admin PIN to view recent resume:");
             if (userInput === null) return;
-
-            if (userInput.trim() !== ADMIN_PIN) { 
-                return alert("Unauthorized: Incorrect PIN");
-            }
+            if (userInput.trim() !== ADMIN_PIN) return alert("Unauthorized: Incorrect PIN");
             sessionPin = userInput.trim();
         }
 
@@ -270,12 +258,10 @@
         output.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // 2. AUTO PDF DOWNLOAD (Via Print)
     function downloadPDF() {
         window.print();
     }
 
-    // 3. HISTORY SAVE (Keep same)
     function saveToHistory(label, html) {
         let history = JSON.parse(localStorage.getItem('resume_history') || '[]');
         history.unshift({ label, html, date: new Date().toLocaleDateString() });
@@ -300,4 +286,3 @@
 
 </body>
 </html>
-
