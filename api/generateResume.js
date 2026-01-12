@@ -19,7 +19,8 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview" });
+    // 'gemini-2.5-flash' is the high-speed standard for 2026
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
