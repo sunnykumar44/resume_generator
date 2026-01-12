@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1beta' });
+    const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
 
@@ -151,11 +151,11 @@ STRATEGY: ${strategyMap[strategy]}
 </html>`;
 
     const result = await genAI.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "models/gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: prompt }] }]
     });
 
-    let html = result.text();
+    let html = result.candidates[0].content.parts[0].text;
     html = html.replace(/```html|```/g, "");
     const startIndex = html.indexOf("<!DOCTYPE html>");
     if (startIndex !== -1) html = html.substring(startIndex);
