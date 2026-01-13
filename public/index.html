@@ -139,6 +139,15 @@
       text-align: center !important;
       width: 100% !important;
     }
+
+    /* Style for the new Quota Status Display */
+    #quotaStatus {
+        margin-top: 12px;
+        font-size: 0.85rem;
+        color: #64748b;
+        text-align: right;
+        font-weight: 500;
+    }
 </style>
 </head>
 <body>
@@ -148,6 +157,8 @@
         <h1 class="no-print"> AI Resume Engine</h1>
         
     <div class="no-print">
+        <div id="quotaStatus">Remaining: 20 / 20</div>
+
         <label>Job Description</label>
         <textarea id="jobDescription" placeholder="Paste the job requirements here..."></textarea>
 
@@ -160,11 +171,6 @@
 
         <button id="generateBtn" class="btn btn-primary" onclick="generate()">Generate Tailored Resume</button>
         
-        <!-- NEW: Quota status display -->
-        <div id="quotaStatus" style="margin-top: 12px; font-size: 0.9rem; color: #64748b; text-align: center; min-height: 1.2em;">
-            Checking quota...
-        </div>
-
         <div id="loading">
             <div class="spinner"></div>
             <p>Crafting your future...</p>
@@ -201,7 +207,7 @@
         const loader = document.getElementById('loading');
         const output = document.getElementById('resume-output');
         const dlBtn = document.getElementById('downloadBtn');
-        const quotaEl = document.getElementById('quotaStatus');
+        const quotaLabel = document.getElementById('quotaStatus');
 
         if(!jd) return alert("Please paste a Job Description");
 
@@ -209,9 +215,6 @@
         loader.style.display = "block";
         output.style.display = "none";
         dlBtn.style.display = "none";
-
-        quotaEl.innerHTML = "Checking quota...";
-        quotaEl.style.color = "#64748b";
 
         try {
             const res = await fetch(API_URL, {
@@ -234,15 +237,11 @@
                 throw new Error("Server sent invalid data. Check Vercel logs.");
             }
 
-            // Handle quota display (works for both success and error responses)
+            // Update Quota display if data is present
             if (data.quota) {
-                const { remaining, limit, used } = data.quota;
-                if (remaining > 0) {
-                    quotaEl.innerHTML = `Resumes left today: <strong>${remaining}/${limit}</strong> (used ${used})`;
-                    quotaEl.style.color = remaining <= 5 ? "#d97706" : "#059669"; // orange if low, green if good
-                } else {
-                    quotaEl.innerHTML = `Quota exceeded: <strong>0/${limit}</strong> left – resets soon`;
-                    quotaEl.style.color = "#dc2626";
+                quotaLabel.innerHTML = `Remaining: ${data.quota.remaining} / ${data.quota.limit}`;
+                if (data.quota.remaining <= 3) {
+                    quotaLabel.style.color = "#dc2626"; // Red if low
                 }
             }
 
@@ -255,10 +254,6 @@
             saveToHistory(jd.substring(0, 30) + "...", data.resume);
 
         } catch (err) {
-            quotaEl.innerHTML = err.message.includes("quota") 
-                ? err.message 
-                : "Error: " + err.message;
-            quotaEl.style.color = "#dc2626";
             alert("Error: " + err.message);
         } finally {
             btn.disabled = false;

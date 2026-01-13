@@ -29,9 +29,7 @@ export default async function handler(req, res) {
   }
 
   // Rate limit check
-  const identifier = "global"; // ← change to pin or IP if you want per-user quota
-  // Example per-PIN: const identifier = pin;
-  // Example per-IP: const identifier = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "anonymous";
+  const identifier = "global"; 
 
   const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
 
