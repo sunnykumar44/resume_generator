@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     // 'gemini-2.5-flash' is the high-speed standard for 2026
-const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
 
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
@@ -53,7 +53,7 @@ STRATEGY: ${strategyMap[strategy]}
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 8mm 12mm;
+    padding: 5mm 12mm;           /* ← ONLY THIS WAS CHANGED: 8mm → 5mm (moves name up ~3mm) */
   }
   
   .split-row { 
