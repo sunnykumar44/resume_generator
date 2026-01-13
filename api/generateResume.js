@@ -130,7 +130,7 @@ export default async function handler(req, res) {
       <div class="section">[AI: cert-item for each cert with a technical project desc]</div>
 
      <h2>Achievements</h2>
-      <div class="section"><ul>[AI: Exactly 2 impact-driven achievements with metrics]</ul></div>
+      <div class="section"><ul>[AI: Exactly 3 impact-driven achievements with metrics]</ul></div>
 
       <div style="display:flex; justify-content:space-between; margin-top:19.8px; border-top:1px solid #cbd5e1; padding-top:12px;">
         <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
