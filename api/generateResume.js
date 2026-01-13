@@ -31,7 +31,7 @@ export default async function handler(req, res) {
   }
 
   // 1. Quota Logic Check
-  const identifier = "global"; 
+  const identifier = pin; 
   const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
 
   if (!success) {

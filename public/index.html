@@ -140,13 +140,14 @@
       width: 100% !important;
     }
 
-    /* Style for the new Quota Status Display */
+    /* Style for the Quota Status Display - HIDDEN BY DEFAULT */
     #quotaStatus {
         margin-top: 12px;
         font-size: 0.85rem;
         color: #64748b;
         text-align: right;
         font-weight: 500;
+        display: none; /* ← Hidden until PIN is entered */
     }
 </style>
 </head>
@@ -201,13 +202,16 @@
             sessionPin = userInput.trim();
         }
         
+        // Immediately show the quota once the PIN is validated
+        const quotaLabel = document.getElementById('quotaStatus');
+        quotaLabel.style.display = "block";
+
         const jd = document.getElementById('jobDescription').value;
         const strategy = document.getElementById('strategy').value;
         const btn = document.getElementById('generateBtn');
         const loader = document.getElementById('loading');
         const output = document.getElementById('resume-output');
         const dlBtn = document.getElementById('downloadBtn');
-        const quotaLabel = document.getElementById('quotaStatus');
 
         if(!jd) return alert("Please paste a Job Description");
 
@@ -268,6 +272,9 @@
             if (userInput.trim() !== ADMIN_PIN) return alert("Unauthorized: Incorrect PIN");
             sessionPin = userInput.trim();
         }
+        
+        // Show quota if loading from history as well
+        document.getElementById('quotaStatus').style.display = "block";
 
         const history = JSON.parse(localStorage.getItem('resume_history') || '[]');
         const output = document.getElementById('resume-output');
