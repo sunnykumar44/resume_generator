@@ -143,7 +143,7 @@ STRATEGY: ${strategyMap[strategy]}
     </ul>
   </div>
 
-  <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #cbd5e1; padding-top:12px;">
+  <div style="display:flex; justify-content:space-between; margin-top:19.8px; border-top:1px solid #cbd5e1; padding-top:12px;">
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
