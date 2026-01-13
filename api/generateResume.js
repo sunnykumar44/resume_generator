@@ -83,7 +83,7 @@ STRATEGY: ${strategyMap[strategy]}
 </head>
 <body>
 
-  <div style="width: 100%; text-align: center !important; margin-bottom: 18px;">
+  <div style="width: 100%; text-align: center !important; margin-top: -6px; margin-bottom: 18px;">
     <h1 style="font-size: 32px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 2px;">
       ${userProfile.name}
     </h1>
