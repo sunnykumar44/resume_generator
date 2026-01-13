@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     // 'gemini-2.5-flash' is the high-speed standard for 2026
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
 
     const profilePath = path.join(process.cwd(), "profile.json");
     const userProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
@@ -137,7 +137,7 @@ STRATEGY: ${strategyMap[strategy]}
  <h2>Achievements</h2>
   <div class="section">
     <ul>
-      [AI: Generate exactly 3 impact-driven achievements. 
+      [AI: Generate exactly 2-3 impact-driven achievements. 
       Each must include a metric (%, $, or time). 
       Example: "Reduced processing time by 20% through automated scripting."]
     </ul>
