@@ -1,6 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
+import { Ratelimit } from "@upstash/ratelimit";      // ← new
+import { Redis } from "@upstash/redis";             // ← new
+
+// IMPORTANT: Define ratelimit instance OUTSIDE the handler (persists across invocations in "warm" functions + enables ephemeral cache)
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.fixedWindow(20, "1 d"),      // 20 requests per day (resets at midnight UTC)
+  // You can also use: Ratelimit.slidingWindow(20, "24 h") for rolling 24h window
+  analytics: true,                                // optional — see usage in Upstash dashboard
+  prefix: "@upstash/ratelimit:resume-generator",  // namespace your keys
+  // ephemeralCache: new Map(),                   // optional — uncomment if you want in-memory cache for hot functions
+});
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Credentials", true);
@@ -17,9 +29,24 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Unauthorized: Invalid PIN" });
   }
 
+  // ── Rate limit check ────────────────────────────────────────────────────────
+  const identifier = "global"; // or use req.headers["x-forwarded-for"]?.split(",")[0] || "anonymous" for per-IP
+  // For per-PIN: const identifier = pin;
+
+  const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
+
+  if (!success) {
+    const retryAfter = Math.ceil((reset - Date.now()) / 1000 / 60); // minutes
+    return res.status(429).json({
+      error: `Daily quota exceeded (20 resumes/day). Try again in ~${retryAfter} minutes.`,
+      remaining,
+      reset: new Date(reset).toISOString(),
+    });
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // 'gemini-2.5-flash' is the high-speed standard for 2026
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     const profilePath = path.join(process.cwd(), "profile.json");
@@ -173,7 +200,3 @@ STRATEGY: ${strategyMap[strategy]}
     return res.status(500).json({ error: err.message });
   }
 }
-
-
-
-//best
