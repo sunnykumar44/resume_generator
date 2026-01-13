@@ -1,17 +1,16 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
-import { Ratelimit } from "@upstash/ratelimit";      // ← new
-import { Redis } from "@upstash/redis";             // ← new
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-// IMPORTANT: Define ratelimit instance OUTSIDE the handler (persists across invocations in "warm" functions + enables ephemeral cache)
+// IMPORTANT: Define ratelimit instance OUTSIDE the handler
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.fixedWindow(20, "1 d"),      // 20 requests per day (resets at midnight UTC)
-  // You can also use: Ratelimit.slidingWindow(20, "24 h") for rolling 24h window
-  analytics: true,                                // optional — see usage in Upstash dashboard
-  prefix: "@upstash/ratelimit:resume-generator",  // namespace your keys
-  // ephemeralCache: new Map(),                   // optional — uncomment if you want in-memory cache for hot functions
+  limiter: Ratelimit.fixedWindow(20, "1 d"),      // 20 resumes per day (midnight UTC reset)
+  analytics: true,
+  prefix: "@upstash/ratelimit:resume-generator",
+  // ephemeralCache: new Map(),                   // optional – uncomment for better perf on warm invocations
 });
 
 export default async function handler(req, res) {
@@ -29,21 +28,25 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Unauthorized: Invalid PIN" });
   }
 
-  // ── Rate limit check ────────────────────────────────────────────────────────
-  const identifier = "global"; // or use req.headers["x-forwarded-for"]?.split(",")[0] || "anonymous" for per-IP
-  // For per-PIN: const identifier = pin;
+  // Rate limit check
+  const identifier = "global"; // ← change to pin or IP if you want per-user quota
+  // Example per-PIN: const identifier = pin;
+  // Example per-IP: const identifier = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "anonymous";
 
   const { success, limit, remaining, reset } = await ratelimit.limit(identifier);
 
   if (!success) {
-    const retryAfter = Math.ceil((reset - Date.now()) / 1000 / 60); // minutes
+    const retryAfter = Math.ceil((reset - Date.now()) / 1000 / 60);
     return res.status(429).json({
       error: `Daily quota exceeded (20 resumes/day). Try again in ~${retryAfter} minutes.`,
-      remaining,
-      reset: new Date(reset).toISOString(),
+      quota: {
+        remaining: 0,
+        limit,
+        used: limit,
+        reset: new Date(reset).toISOString()
+      }
     });
   }
-  // ────────────────────────────────────────────────────────────────────────────
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -80,7 +83,7 @@ STRATEGY: ${strategyMap[strategy]}
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 5mm 12mm;           /* ← ONLY THIS WAS CHANGED: 8mm → 5mm (moves name up ~3mm) */
+    padding: 5mm 12mm;
   }
   
   .split-row { 
@@ -193,7 +196,17 @@ STRATEGY: ${strategyMap[strategy]}
     const startIndex = html.indexOf("<!DOCTYPE html>");
     if (startIndex !== -1) html = html.substring(startIndex);
 
-    return res.status(200).json({ success: true, resume: html });
+    // SUCCESS RESPONSE WITH QUOTA INFO
+    return res.status(200).json({ 
+      success: true, 
+      resume: html,
+      quota: {
+        remaining,
+        limit,
+        used: limit - remaining,
+        reset: new Date(reset).toISOString()
+      }
+    });
 
   } catch (err) {
     console.error('Backend Error:', err);
