@@ -19,7 +19,6 @@ export default async function handler(req, res) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // 'gemini-2.5-flash' is the high-speed standard for 2026
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     const profilePath = path.join(process.cwd(), "profile.json");
@@ -53,7 +52,7 @@ STRATEGY: ${strategyMap[strategy]}
     color: #1e293b; 
     max-width: 210mm; 
     margin: 0 auto; 
-    padding: 5mm 12mm;           /* ← ONLY THIS WAS CHANGED: 8mm → 5mm (moves name up ~3mm) */
+    padding: 5mm 12mm;
   }
   
   .split-row { 
@@ -83,7 +82,7 @@ STRATEGY: ${strategyMap[strategy]}
 </head>
 <body>
 
-  <div style="width: 100%; text-align: center !important; margin-top: -2mm; margin-bottom: 18px;">
+  <div style="width: 100%; text-align: center !important; margin: -4mm 0 18px 0;">
     <h1 style="font-size: 32px; font-weight: 800; color: #1a365d; text-transform: uppercase; margin-bottom: 2px;">
       ${userProfile.name}
     </h1>
@@ -143,7 +142,7 @@ STRATEGY: ${strategyMap[strategy]}
     </ul>
   </div>
 
-  <div style="display:flex; justify-content:space-between; margin-top:19.8px; border-top:1px solid #cbd5e1; padding-top:12px;">
+  <div style="display:flex; justify-content:space-between; margin-top:0.3mm; border-top:1px solid #cbd5e1; padding-top:12px;">
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 1]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 2]</div>
     <div style="font-size:10px; font-weight:800; color:#2b6cb0; text-transform:uppercase;">[Trait 3]</div>
@@ -173,7 +172,3 @@ STRATEGY: ${strategyMap[strategy]}
     return res.status(500).json({ error: err.message });
   }
 }
-
-
-
-//best
