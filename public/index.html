@@ -160,6 +160,11 @@
 
         <button id="generateBtn" class="btn btn-primary" onclick="generate()">Generate Tailored Resume</button>
         
+        <!-- NEW: Quota status display -->
+        <div id="quotaStatus" style="margin-top: 12px; font-size: 0.9rem; color: #64748b; text-align: center; min-height: 1.2em;">
+            Checking quota...
+        </div>
+
         <div id="loading">
             <div class="spinner"></div>
             <p>Crafting your future...</p>
@@ -196,6 +201,7 @@
         const loader = document.getElementById('loading');
         const output = document.getElementById('resume-output');
         const dlBtn = document.getElementById('downloadBtn');
+        const quotaEl = document.getElementById('quotaStatus');
 
         if(!jd) return alert("Please paste a Job Description");
 
@@ -203,6 +209,9 @@
         loader.style.display = "block";
         output.style.display = "none";
         dlBtn.style.display = "none";
+
+        quotaEl.innerHTML = "Checking quota...";
+        quotaEl.style.color = "#64748b";
 
         try {
             const res = await fetch(API_URL, {
@@ -215,7 +224,6 @@
                 })
             });
 
-            // FIX: Read as text first to handle non-JSON error pages from Vercel
             const rawResponse = await res.text();
             
             let data;
@@ -223,7 +231,19 @@
                 data = JSON.parse(rawResponse);
             } catch (parseError) {
                 console.error("Raw Server Error:", rawResponse);
-                throw new Error("Server sent invalid data. Check Vercel logs. Response started with: " + rawResponse.substring(0, 50));
+                throw new Error("Server sent invalid data. Check Vercel logs.");
+            }
+
+            // Handle quota display (works for both success and error responses)
+            if (data.quota) {
+                const { remaining, limit, used } = data.quota;
+                if (remaining > 0) {
+                    quotaEl.innerHTML = `Resumes left today: <strong>${remaining}/${limit}</strong> (used ${used})`;
+                    quotaEl.style.color = remaining <= 5 ? "#d97706" : "#059669"; // orange if low, green if good
+                } else {
+                    quotaEl.innerHTML = `Quota exceeded: <strong>0/${limit}</strong> left – resets soon`;
+                    quotaEl.style.color = "#dc2626";
+                }
             }
 
             if (!res.ok) throw new Error(data.error || "Generation failed");
@@ -235,6 +255,10 @@
             saveToHistory(jd.substring(0, 30) + "...", data.resume);
 
         } catch (err) {
+            quotaEl.innerHTML = err.message.includes("quota") 
+                ? err.message 
+                : "Error: " + err.message;
+            quotaEl.style.color = "#dc2626";
             alert("Error: " + err.message);
         } finally {
             btn.disabled = false;
