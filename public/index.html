@@ -25,6 +25,9 @@
         background: var(--bg);
         color: #1e293b;
         line-height: 1.5;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
     }
 
     /* Layout */
@@ -35,6 +38,7 @@
         max-width: 1200px;
         margin: 40px auto;
         padding: 0 20px;
+        flex: 1;
     }
 
     .main-card {
@@ -86,7 +90,6 @@
     .btn-primary:hover { background: var(--primary-hover); }
     .btn-success { background: var(--success); color: white; margin-top: 10px; }
     
-    /* New Style for Copy Button */
     .btn-outline { 
         background: transparent; 
         border: 1px solid #cbd5e1; 
@@ -94,6 +97,19 @@
         margin-top: 10px;
     }
     .btn-outline:hover { background: #f1f5f9; }
+
+    /* Footer Styling */
+    footer {
+        background: white;
+        padding: 20px;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+        margin-top: 40px;
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+    footer a { color: var(--primary); text-decoration: none; font-weight: 500; }
+    footer a:hover { text-decoration: underline; }
 
     /* History Sidebar */
     .history-card {
@@ -114,7 +130,6 @@
 
     .history-item:hover { background: #f8fafc; }
 
-    /* Resume Output (The A4 Look) */
     #resume-output {
         margin-top: 15px; 
         padding: 20px 40px; 
@@ -124,7 +139,6 @@
         display: none;
     }
 
-    /* Loading */
     #loading { display: none; text-align: center; margin: 20px 0; }
     .spinner {
         width: 24px;
@@ -143,6 +157,7 @@
         .app-grid { display: block; margin: 0; padding: 0; }
         #resume-output { display: block !important; border: none; padding: 0; }
         @page { margin: 0; }
+        footer { display: none; }
     }
 
     @media (max-width: 768px) {
@@ -155,14 +170,13 @@
       width: 100% !important;
     }
 
-    /* Style for the Quota Status Display - HIDDEN BY DEFAULT */
     #quotaStatus {
         margin-top: 12px;
         font-size: 0.85rem;
         color: #64748b;
         text-align: right;
         font-weight: 500;
-        display: none; /* ← Hidden until PIN is entered */
+        display: none; 
     }
 </style>
 </head>
@@ -207,6 +221,11 @@
     </div>
 </div></div>
 
+<footer class="no-print">
+    <p>Contact: <a href="mailto:sk4936469@gmail.com">sk4936469@gmail.com</a> | 
+    View Portfolio: <a href="https://demokfp.netlify.app/" target="_blank">demokfp.netlify.app</a></p>
+</footer>
+
 <script>
     const API_URL = "/api/generateResume";
     const ADMIN_PIN = "8080"; 
@@ -250,7 +269,6 @@
                 })
             });
 
-            // Specific handler for Daily Limit (429)
             if (res.status === 429) {
                 alert("Daily Limit Reached: You've used your 20 resumes for today. Your credits will reset in 24 hours. See you tomorrow!");
                 btn.disabled = false;
