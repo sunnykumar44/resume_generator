@@ -1,0 +1,6 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Direct search engines to your sitemap
+Sitemap: https://www.sunnysweb.me/sitemap.xml
