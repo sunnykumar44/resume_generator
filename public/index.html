@@ -85,6 +85,15 @@
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-hover); }
     .btn-success { background: var(--success); color: white; margin-top: 10px; }
+    
+    /* New Style for Copy Button */
+    .btn-outline { 
+        background: transparent; 
+        border: 1px solid #cbd5e1; 
+        color: #64748b; 
+        margin-top: 10px;
+    }
+    .btn-outline:hover { background: #f1f5f9; }
 
     /* History Sidebar */
     .history-card {
@@ -185,7 +194,10 @@
     </div>
 
     <div id="resume-output"></div>
-    <button id="downloadBtn" class="btn btn-success no-print" style="display:none;" onclick="downloadPDF()"> Download PDF</button>
+    <div class="no-print">
+        <button id="downloadBtn" class="btn btn-success" style="display:none;" onclick="downloadPDF()"> Download PDF</button>
+        <button id="copyBtn" class="btn btn-outline" style="display:none;" onclick="copyToClipboard()"> Copy to Clipboard</button>
+    </div>
 </div>
 
 <div class="sidebar no-print">
@@ -208,7 +220,6 @@
             sessionPin = userInput.trim();
         }
         
-        // Immediately show the quota once the PIN is validated
         const quotaLabel = document.getElementById('quotaStatus');
         quotaLabel.style.display = "block";
 
@@ -218,6 +229,7 @@
         const loader = document.getElementById('loading');
         const output = document.getElementById('resume-output');
         const dlBtn = document.getElementById('downloadBtn');
+        const cpBtn = document.getElementById('copyBtn');
 
         if(!jd) return alert("Please paste a Job Description");
 
@@ -225,6 +237,7 @@
         loader.style.display = "block";
         output.style.display = "none";
         dlBtn.style.display = "none";
+        cpBtn.style.display = "none";
 
         try {
             const res = await fetch(API_URL, {
@@ -237,6 +250,14 @@
                 })
             });
 
+            // Specific handler for Daily Limit (429)
+            if (res.status === 429) {
+                alert("Daily Limit Reached: You've used your 20 resumes for today. Your credits will reset in 24 hours. See you tomorrow!");
+                btn.disabled = false;
+                loader.style.display = "none";
+                return;
+            }
+
             const rawResponse = await res.text();
             
             let data;
@@ -247,11 +268,10 @@
                 throw new Error("Server sent invalid data. Check Vercel logs.");
             }
 
-            // Update Quota display if data is present
             if (data.quota) {
                 quotaLabel.innerHTML = `Remaining: ${data.quota.remaining} / ${data.quota.limit}`;
                 if (data.quota.remaining <= 3) {
-                    quotaLabel.style.color = "#dc2626"; // Red if low
+                    quotaLabel.style.color = "#dc2626";
                 }
             }
 
@@ -260,6 +280,7 @@
             output.innerHTML = data.resume;
             output.style.display = "block";
             dlBtn.style.display = "block";
+            cpBtn.style.display = "block";
 
             saveToHistory(jd.substring(0, 30) + "...", data.resume);
 
@@ -279,7 +300,6 @@
             sessionPin = userInput.trim();
         }
         
-        // Show quota if loading from history as well
         document.getElementById('quotaStatus').style.display = "block";
 
         const history = JSON.parse(localStorage.getItem('resume_history') || '[]');
@@ -287,11 +307,26 @@
         output.innerHTML = history[index].html;
         output.style.display = "block";
         document.getElementById('downloadBtn').style.display = "block";
+        document.getElementById('copyBtn').style.display = "block";
         output.scrollIntoView({ behavior: 'smooth' });
     }
 
     function downloadPDF() {
         window.print();
+    }
+    
+    async function copyToClipboard() {
+        const output = document.getElementById('resume-output');
+        const text = output.innerText;
+        try {
+            await navigator.clipboard.writeText(text);
+            const cpBtn = document.getElementById('copyBtn');
+            const originalText = cpBtn.innerText;
+            cpBtn.innerText = "✓ Copied!";
+            setTimeout(() => { cpBtn.innerText = originalText; }, 2000);
+        } catch (err) {
+            alert("Failed to copy text.");
+        }
     }
 
     function saveToHistory(label, html) {
@@ -318,6 +353,3 @@
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
-
-
-
